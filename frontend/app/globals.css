@@ -1,0 +1,159 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-0: #f6f4ef;
+  --bg-1: #fffdf8;
+  --ink-0: #122012;
+  --ink-1: #264b2c;
+  --accent-0: #f45d22;
+  --accent-1: #3f8f4f;
+  --warn: #a53023;
+  --border: #d8d4c9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--ink-0);
+  background: radial-gradient(circle at 20% 20%, #ffe4c8 0, rgba(255, 228, 200, 0.15) 40%),
+    radial-gradient(circle at 80% 10%, #d5f0d9 0, rgba(213, 240, 217, 0.12) 45%),
+    linear-gradient(130deg, var(--bg-0), var(--bg-1));
+}
+
+.shell {
+  width: min(960px, 92vw);
+  margin: 30px auto 60px;
+  display: grid;
+  gap: 20px;
+}
+
+.hero-card,
+.panel {
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 18px;
+  box-shadow: 0 10px 28px rgba(12, 31, 16, 0.09);
+}
+
+.hero-card h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+}
+
+.notice {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff3e6;
+  color: #8e3f1b;
+  font-size: 0.88rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-weight: 500;
+}
+
+select,
+input,
+button,
+a {
+  font-family: inherit;
+}
+
+select,
+input[type="file"] {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 16px;
+  background: linear-gradient(130deg, var(--accent-0), #f0893c);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status {
+  margin-top: 12px;
+  color: var(--ink-1);
+}
+
+.error {
+  margin-top: 10px;
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.metric .big {
+  font-size: 2.2rem;
+  margin: 6px 0 0;
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.code {
+  font-family: 'IBM Plex Mono', monospace;
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  background: #f9f9f5;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.78rem;
+}
+
+.actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actions a {
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: var(--ink-0);
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    margin-top: 14px;
+  }
+
+  .hero-card,
+  .panel {
+    padding: 14px;
+    border-radius: 14px;
+  }
+}

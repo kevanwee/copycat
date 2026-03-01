@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.venv/
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Node
+node_modules/
+.next/
+
+# Local data
+backend/data/uploads/*
+backend/data/reports/*
+!backend/data/uploads/.gitkeep
+!backend/data/reports/.gitkeep
+backend/data/copycat.db
+
+# Environment
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db

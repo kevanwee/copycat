@@ -1,0 +1,131 @@
+{
+  "rule_pack_id": "sg_v1",
+  "title": "Singapore Copyright Triage Rule Pack v1",
+  "version": "1.0.0",
+  "jurisdiction": "SG",
+  "citations": {
+    "SG_CA_2021": {
+      "title": "Singapore Copyright Act 2021",
+      "url": "https://www.wipo.int/wipolex/edocs/lexdocs/laws/en/sg/sg223en.pdf"
+    },
+    "SGCA_2017_28": {
+      "title": "Global Yellow Pages Ltd v Promedia Directories Pte Ltd [2017] SGCA 28",
+      "url": "https://www.elitigation.sg/gd/s/2017_SGCA_28"
+    },
+    "SGCA_2011_37": {
+      "title": "RecordTV Pte Ltd v MediaCorp TV Singapore Pte Ltd [2011] SGCA 37",
+      "url": "https://www.elitigation.sg/gd/s/2011_SGCA_37"
+    }
+  },
+  "nodes": [
+    {
+      "id": "subsistence_work_category",
+      "phase": "subsistence",
+      "prompt": "Does the claimant work fall within a protected copyright category?",
+      "required_facts": ["work_category_supported"],
+      "eval": {"type": "fact_bool", "fact": "work_category_supported"},
+      "legal_refs": ["SG_CA_2021"]
+    },
+    {
+      "id": "subsistence_originality_fixation",
+      "phase": "subsistence",
+      "prompt": "Is there evidence of originality and fixation/material form?",
+      "required_facts": ["originality_evidence", "fixation_evidence"],
+      "eval": {"type": "all_true", "facts": ["originality_evidence", "fixation_evidence"]},
+      "legal_refs": ["SG_CA_2021", "SGCA_2011_37"]
+    },
+    {
+      "id": "subsistence_sg_connection",
+      "phase": "subsistence",
+      "prompt": "Are Singapore qualification/connection factors indicated?",
+      "required_facts": ["sg_connection"],
+      "eval": {"type": "fact_bool", "fact": "sg_connection"},
+      "legal_refs": ["SG_CA_2021"]
+    },
+    {
+      "id": "subsistence_term_status",
+      "phase": "subsistence",
+      "prompt": "Is term/status still active or plausibly active?",
+      "required_facts": ["term_active"],
+      "eval": {"type": "fact_bool", "fact": "term_active"},
+      "legal_refs": ["SG_CA_2021"]
+    },
+    {
+      "id": "subsistence_overall",
+      "phase": "subsistence",
+      "prompt": "Overall subsistence indication.",
+      "required_nodes": [
+        "subsistence_work_category",
+        "subsistence_originality_fixation",
+        "subsistence_sg_connection",
+        "subsistence_term_status"
+      ],
+      "eval": {"type": "all_nodes_true", "nodes": [
+        "subsistence_work_category",
+        "subsistence_originality_fixation",
+        "subsistence_sg_connection",
+        "subsistence_term_status"
+      ]},
+      "legal_refs": ["SG_CA_2021"]
+    },
+    {
+      "id": "infringement_ownership_standing",
+      "phase": "infringement",
+      "prompt": "Is ownership/standing asserted with at least minimal evidence?",
+      "required_facts": ["ownership_asserted"],
+      "eval": {"type": "fact_bool", "fact": "ownership_asserted"},
+      "legal_refs": ["SG_CA_2021"]
+    },
+    {
+      "id": "infringement_acts_covered",
+      "phase": "infringement",
+      "prompt": "Do alleged acts map to rights controlled by copyright?",
+      "required_facts": ["acts_covered"],
+      "eval": {"type": "fact_bool", "fact": "acts_covered"},
+      "legal_refs": ["SG_CA_2021"]
+    },
+    {
+      "id": "infringement_no_authorization",
+      "phase": "infringement",
+      "prompt": "Is there no known license/authorization?",
+      "required_facts": ["authorization_present"],
+      "eval": {"type": "fact_false", "fact": "authorization_present"},
+      "legal_refs": ["SG_CA_2021"]
+    },
+    {
+      "id": "copying_causal_connection",
+      "phase": "infringement",
+      "prompt": "Is there evidence of access/causal connection?",
+      "required_facts": ["access_evidence"],
+      "eval": {"type": "fact_bool", "fact": "access_evidence"},
+      "legal_refs": ["SGCA_2017_28"]
+    },
+    {
+      "id": "copying_objective_similarity",
+      "phase": "infringement",
+      "prompt": "Is objective similarity above minimum indicator threshold?",
+      "required_facts": ["similarity_score"],
+      "eval": {"type": "score_gte", "fact": "similarity_score", "threshold": 0.4},
+      "legal_refs": ["SGCA_2017_28"]
+    },
+    {
+      "id": "substantial_taking_quality",
+      "phase": "substantial_taking",
+      "prompt": "Does evidence indicate substantial taking by quality/importance?",
+      "required_facts": ["similarity_score", "qualitative_importance_flag"],
+      "eval": {"type": "any_true", "facts": ["qualitative_importance_flag", "high_similarity_flag"]},
+      "derive": {
+        "high_similarity_flag": {"type": "score_gte", "fact": "similarity_score", "threshold": 0.6}
+      },
+      "legal_refs": ["SGCA_2017_28"]
+    },
+    {
+      "id": "exceptions_fair_use_signal",
+      "phase": "exceptions",
+      "prompt": "Are fair use / statutory exception indicators present?",
+      "required_facts": ["fair_use_indicator"],
+      "eval": {"type": "fact_bool", "fact": "fair_use_indicator"},
+      "legal_refs": ["SG_CA_2021"]
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info:
+  title: Copycat API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/v1/cases:
+    post:
+      summary: Create case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jurisdiction:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '200':
+          description: Case created
+  /api/v1/cases/{case_id}/artifacts:
+    post:
+      summary: Upload artifact
+      parameters:
+        - in: path
+          name: case_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [original, alleged]
+                media_type:
+                  type: string
+                  enum: [text, video]
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Artifact uploaded
+  /api/v1/cases/{case_id}/analyze:
+    post:
+      summary: Start analysis
+      parameters:
+        - in: path
+          name: case_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analysis job queued
+  /api/v1/jobs/{job_id}:
+    get:
+      summary: Get job status
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job details
+  /api/v1/cases/{case_id}/report:
+    get:
+      summary: Get JSON report
+      parameters:
+        - in: path
+          name: case_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report available
+  /api/v1/cases/{case_id}/report.pdf:
+    get:
+      summary: Get PDF report
+      parameters:
+        - in: path
+          name: case_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF stream

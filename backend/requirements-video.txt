@@ -1,0 +1,8 @@
+# Optional video/ML extras (recommended on Python 3.11 Linux)
+numpy==2.2.3
+scikit-learn==1.6.1
+opencv-python-headless==4.11.0.86
+Pillow==11.1.0
+ImageHash==4.3.2
+scikit-image==0.25.2
+openai-whisper==20240930
