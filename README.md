@@ -6,6 +6,8 @@
 
 ---
 
+---
+
 ## Stack
 
 | Layer | Technology |
@@ -16,6 +18,18 @@
 | Database | SQLite (dev) / PostgreSQL-ready via SQLAlchemy |
 | Storage | Local filesystem (dev) / S3-compatible abstraction |
 | Reports | ReportLab PDF |
+
+---
+
+## Screenshots
+
+**Triage UI — upload form**
+
+![Copycat triage UI](screenshots/ui.png)
+
+**Analysis run — terminal output**
+
+![Test run output](screenshots/runtest.png)
 
 ---
 
