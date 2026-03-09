@@ -92,36 +92,17 @@ export default function HomePage() {
           <div className="field">
             <span className="field-label">Comparison type</span>
             <div className="type-toggle">
-              <label>
-                <input
-                  type="radio"
-                  name="mediaType"
-                  value="text"
-                  checked={mediaType === "text"}
-                  onChange={() => { setMediaType("text"); setOriginalFile(null); setAllegedFile(null); }}
-                />
-                <span>📄 Text vs Text</span>
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="mediaType"
-                  value="video"
-                  checked={mediaType === "video"}
-                  onChange={() => { setMediaType("video"); setOriginalFile(null); setAllegedFile(null); }}
-                />
-                <span>🎬 Video vs Video</span>
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="mediaType"
-                  value="image"
-                  checked={mediaType === "image"}
-                  onChange={() => { setMediaType("image"); setOriginalFile(null); setAllegedFile(null); }}
-                />
-                <span>🎨 Image vs Image</span>
-              </label>
+              {(["text", "video", "image"] as MediaType[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`type-option${mediaType === t ? " active" : ""}`}
+                  onClick={() => { setMediaType(t); setOriginalFile(null); setAllegedFile(null); }}
+                  disabled={busy}
+                >
+                  {t === "text" ? "📄 Text vs Text" : t === "video" ? "🎬 Video vs Video" : "🎨 Image vs Image"}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -131,6 +112,7 @@ export default function HomePage() {
               <span className="field-label">Original work</span>
               <div className={`upload-zone${originalFile ? " filled" : ""}`}>
                 <input
+                  key={`orig-${mediaType}`}
                   type="file"
                   accept={accept}
                   onChange={(e) => setOriginalFile(e.target.files?.[0] ?? null)}
@@ -141,7 +123,9 @@ export default function HomePage() {
                   ? <span className="upload-filename">{originalFile.name}</span>
                   : <>
                       <span className="upload-text">Click to select original</span>
-                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : mediaType === "image" ? "JPG, PNG, WEBP, GIF, BMP, TIFF" : "MP4, MOV, MKV, AVI"}</span>
+                      <span className="upload-accept">
+                        {mediaType === "text" ? "TXT, PDF, DOCX" : mediaType === "image" ? "JPG, PNG, WEBP, BMP, TIFF" : "MP4, MOV, MKV, AVI"}
+                      </span>
                     </>
                 }
               </div>
@@ -151,6 +135,7 @@ export default function HomePage() {
               <span className="field-label">Alleged copy</span>
               <div className={`upload-zone${allegedFile ? " filled" : ""}`}>
                 <input
+                  key={`alleged-${mediaType}`}
                   type="file"
                   accept={accept}
                   onChange={(e) => setAllegedFile(e.target.files?.[0] ?? null)}
@@ -161,7 +146,9 @@ export default function HomePage() {
                   ? <span className="upload-filename">{allegedFile.name}</span>
                   : <>
                       <span className="upload-text">Click to select alleged copy</span>
-                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : mediaType === "image" ? "JPG, PNG, WEBP, GIF, BMP, TIFF" : "MP4, MOV, MKV, AVI"}</span>
+                      <span className="upload-accept">
+                        {mediaType === "text" ? "TXT, PDF, DOCX" : mediaType === "image" ? "JPG, PNG, WEBP, BMP, TIFF" : "MP4, MOV, MKV, AVI"}
+                      </span>
                     </>
                 }
               </div>

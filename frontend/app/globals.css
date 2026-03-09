@@ -234,14 +234,14 @@ select:focus { border-color: var(--accent); }
 /* ─── TYPE TOGGLE ────────────────────────────── */
 .type-toggle {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   padding: 4px;
   background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
 }
 
-.type-toggle label {
+.type-option {
   flex: 1;
   display: flex;
   align-items: center;
@@ -251,26 +251,29 @@ select:focus { border-color: var(--accent); }
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
+  font-family: inherit;
   color: var(--muted);
+  background: transparent;
+  border: none;
   border-radius: calc(var(--radius-sm) - 2px);
   transition: background 0.14s, color 0.14s, box-shadow 0.14s;
   white-space: nowrap;
   user-select: none;
 }
 
-.type-toggle label:hover {
-  background: var(--border-subtle);
+.type-option:hover:not(:disabled) {
+  background: var(--border);
   color: var(--text);
 }
 
-.type-toggle input[type="radio"] { display: none; }
-
-.type-toggle label:has(input:checked) {
+.type-option.active {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
   box-shadow: 0 1px 6px rgba(244,93,34,0.30);
 }
+
+.type-option:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ─── FILE UPLOAD ────────────────────────────── */
 .upload-zone {
@@ -305,9 +308,9 @@ select:focus { border-color: var(--accent); }
 }
 
 .upload-icon { font-size: 1.5rem; display: block; margin-bottom: 6px; }
-.upload-text { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
-.upload-accept { font-size: 0.75rem; color: var(--muted-2); margin-top: 4px; }
-.upload-filename { font-size: 0.82rem; color: var(--accent-dark); font-weight: 600; margin-top: 6px; }
+.upload-text { font-size: 0.85rem; color: var(--muted); font-weight: 500; display: block; }
+.upload-accept { font-size: 0.75rem; color: var(--muted-2); margin-top: 4px; display: block; }
+.upload-filename { font-size: 0.82rem; color: var(--accent-dark); font-weight: 600; margin-top: 6px; display: block; }
 
 /* ─── BUTTONS ────────────────────────────────── */
 .btn {
