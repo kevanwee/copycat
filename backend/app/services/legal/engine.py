@@ -90,15 +90,23 @@ def evaluate_rulepack(rulepack: dict[str, Any], facts: dict[str, Any]) -> tuple[
         known_required_nodes = [node_answers.get(key) is not None for key in required_nodes]
 
         denominator = max(1, len(required_facts) + len(required_nodes))
-        confidence = (sum(known_required_facts) + sum(known_required_nodes)) / denominator
+        evidence_ratio = (sum(known_required_facts) + sum(known_required_nodes)) / denominator
 
         bool_result = _evaluate_expression(node.get("eval", {}), facts, node_answers)
         if bool_result is True:
             answer = "yes"
+            answer_certainty = 1.0
         elif bool_result is False:
             answer = "no"
+            answer_certainty = 1.0
         else:
             answer = "unknown"
+            answer_certainty = 0.0
+
+        # Blend evidence coverage (60%) and answer determinism (40%).
+        # Prevents a node with all facts present but an unknown answer from
+        # falsely reporting 100% confidence.
+        confidence = round((evidence_ratio * 0.6) + (answer_certainty * 0.4), 6)
 
         evidence_refs = [f"fact:{f}" for f in required_facts if facts.get(f) is not None]
         evidence_refs.extend([f"node:{n}" for n in required_nodes if node_answers.get(n) is not None])
@@ -107,7 +115,7 @@ def evaluate_rulepack(rulepack: dict[str, Any], facts: dict[str, Any]) -> tuple[
             node_id=node["id"],
             phase=node["phase"],
             answer=answer,
-            confidence=round(confidence, 6),
+            confidence=confidence,
             evidence_refs=evidence_refs,
             legal_refs=node.get("legal_refs", []),
             prompt=node.get("prompt", ""),
@@ -120,13 +128,13 @@ def evaluate_rulepack(rulepack: dict[str, Any], facts: dict[str, Any]) -> tuple[
 
 def compute_risk_band(node_answers: dict[str, str], similarity_score: float) -> str:
     if node_answers.get("subsistence_overall") == "no":
-        return "low"
+        return "LOW"
 
-    base = "low"
+    base = "LOW"
     if similarity_score >= 0.75:
-        base = "high"
+        base = "HIGH"
     elif similarity_score >= 0.40:
-        base = "medium"
+        base = "MEDIUM"
 
     infringement_core = all(
         node_answers.get(key) == "yes"
@@ -140,12 +148,12 @@ def compute_risk_band(node_answers: dict[str, str], similarity_score: float) -> 
     )
 
     if infringement_core:
-        base = "high"
+        base = "HIGH"
 
     if node_answers.get("exceptions_fair_use_signal") == "yes":
-        if base == "high":
-            return "medium"
-        if base == "medium":
-            return "low"
+        if base == "HIGH":
+            return "MEDIUM"
+        if base == "MEDIUM":
+            return "LOW"
 
     return base

@@ -7,7 +7,18 @@ from typing import Any
 
 from app.services.extraction.text import normalize_text, tokenize
 
-ENTITY_PATTERN = re.compile(r"\b(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*|[A-Z]{2,}|\d{4})\b")
+# Improved: captures multi-word proper noun chains, monetary amounts, percentages,
+# acronyms, and 4-digit years.
+ENTITY_PATTERN = re.compile(
+    r"\b(?:"
+    r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+"  # two+ word proper noun chain (e.g. "New York")
+    r"|[A-Z][a-z]+"                      # single capitalised word
+    r"|[A-Z]{2,}"                        # acronym (e.g. "SGCA")
+    r"|\$[\d,]+(?:\.\d+)?"              # monetary amount ($1,234.56)
+    r"|\d+(?:\.\d+)?%"                  # percentage (12.5%)
+    r"|\d{4}"                           # 4-digit year
+    r")\b"
+)
 
 
 @dataclass(slots=True)
@@ -181,7 +192,25 @@ def compute_text_similarity(raw_original: str, raw_alleged: str) -> TextSimilari
     score = (0.35 * m1) + (0.25 * m2) + (0.30 * m3) + (0.10 * m4)
     score = max(0.0, min(1.0, float(score)))
 
+    # Length asymmetry guard: a very short excerpt compared against a large document
+    # can produce misleadingly high scores.  When the shorter text is less than 5% of
+    # the longer one we scale the score down proportionally, with a floor at 50%.
+    len_a, len_b = len(tokens_a), len(tokens_b)
+    max_len = max(len_a, len_b, 1)
+    min_len = min(len_a, len_b)
+    length_ratio = min_len / max_len
+    _ASYMMETRY_THRESHOLD = 0.05
+    if length_ratio < _ASYMMETRY_THRESHOLD:
+        scale = max(length_ratio / _ASYMMETRY_THRESHOLD, 0.5)
+        score = score * scale
+        score = max(0.0, min(1.0, score))
+
     matches = matched_passages(tokens_a, tokens_b)
+
+    # Overlap density: fraction of alleged tokens covered by verbatim 12-token windows.
+    overlap_density = round(
+        (len(matches) * 12) / max(len_b, 1), 6
+    ) if matches else 0.0
 
     return TextSimilarityResult(
         headline_score=score,

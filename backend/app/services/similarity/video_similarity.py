@@ -125,9 +125,15 @@ def compute_video_similarity(
     v2, v3 = _compute_ssim_and_psnr(aligned)
 
     transcript_result = compute_text_similarity(original_transcript or "", alleged_transcript or "")
-    v4 = transcript_result.headline_score if (original_transcript or alleged_transcript) else 0.0
+    both_have_transcript = bool(original_transcript and alleged_transcript)
+    v4 = transcript_result.headline_score if both_have_transcript else 0.0
 
-    video_score = (0.50 * v1) + (0.20 * v2) + (0.30 * v4)
+    if both_have_transcript:
+        # Standard formula: V1 45%, V2 18%, V3 7%, V4 30%
+        video_score = (0.45 * v1) + (0.18 * v2) + (0.07 * v3) + (0.30 * v4)
+    else:
+        # No usable transcript: redistribute V4 weight to visual metrics
+        video_score = (0.75 * v1) + (0.25 * v2)
     video_score = max(0.0, min(1.0, float(video_score)))
 
     return VideoSimilarityResult(

@@ -3,6 +3,12 @@
   "title": "Singapore Copyright Triage Rule Pack v1",
   "version": "1.0.0",
   "jurisdiction": "SG",
+  "risk_thresholds": {
+    "high": 0.75,
+    "medium": 0.40,
+    "note": "Similarity score thresholds used by compute_risk_band. Infringement core nodes can elevate to HIGH independently of score."
+  },
+  "supported_media_types": ["text", "video", "image"],
   "citations": {
     "SG_CA_2021": {
       "title": "Singapore Copyright Act 2021",
