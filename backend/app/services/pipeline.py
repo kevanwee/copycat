@@ -6,12 +6,14 @@ from app.core.config import get_settings
 from app.db.models import Artifact, Case, CaseReport, Job, SimilarityMetric
 from app.services.extraction.text import extract_text
 from app.services.extraction.video import extract_video, probe_duration_seconds
+from app.services.extraction.image import extract_image
 from app.services.legal.engine import compute_risk_band, evaluate_rulepack
 from app.services.legal.rulepack_loader import load_rulepack
 from app.services.reports.builder import build_report_payload
 from app.services.reports.pdf_renderer import render_report_pdf
 from app.services.similarity.text_similarity import compute_text_similarity
 from app.services.similarity.video_similarity import compute_video_similarity
+from app.services.similarity.image_similarity import compute_image_similarity
 
 
 settings = get_settings()
@@ -47,7 +49,7 @@ def _validate_pair(artifacts: list[Artifact]) -> str:
         raise ValueError("Cross-medium comparisons are not supported in v1.")
 
     media_type = next(iter(media_types))
-    if media_type not in {"text", "video"}:
+    if media_type not in {"text", "video", "image"}:
         raise ValueError(f"Unsupported media_type={media_type}")
 
     return media_type
@@ -99,6 +101,33 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
                 "lengths": {
                     "original_tokens": sim.normalized_original_length,
                     "alleged_tokens": sim.normalized_alleged_length,
+                },
+            },
+        }
+
+    elif media_type == "image":
+        case_work = settings.report_root / case_id
+        original_work = case_work / "original"
+        alleged_work = case_work / "alleged"
+
+        original_extraction = extract_image(original.storage_path, original_work)
+        alleged_extraction = extract_image(alleged.storage_path, alleged_work)
+
+        _update_job(db, job, status="running", stage="score_image", progress=0.55)
+
+        sim = compute_image_similarity(
+            original_extraction.normalized_path,
+            alleged_extraction.normalized_path,
+        )
+
+        similarity_payload = {
+            "headline_score": sim.headline_score,
+            "component_scores": sim.component_scores,
+            "evidence": {
+                **sim.evidence,
+                "dimensions": {
+                    "original": {"width": original_extraction.width, "height": original_extraction.height, "format": original_extraction.format},
+                    "alleged": {"width": alleged_extraction.width, "height": alleged_extraction.height, "format": alleged_extraction.format},
                 },
             },
         }

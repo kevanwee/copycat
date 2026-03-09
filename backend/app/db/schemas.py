@@ -22,7 +22,7 @@ class ArtifactResponse(BaseModel):
     artifact_id: str
     case_id: str
     role: Literal["original", "alleged"]
-    media_type: Literal["text", "video"]
+    media_type: Literal["text", "video", "image"]
     filename: str
     size_bytes: int
 

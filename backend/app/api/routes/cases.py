@@ -19,6 +19,7 @@ storage = LocalStorage()
 
 TEXT_EXTENSIONS = {".txt", ".pdf", ".docx"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tiff", ".tif"}
 
 
 def _get_case_or_404(db: Session, case_id: str) -> Case:
@@ -55,8 +56,8 @@ async def upload_artifact(
     media_type = media_type.lower().strip()
     if role not in {"original", "alleged"}:
         raise HTTPException(status_code=400, detail="role must be original or alleged")
-    if media_type not in {"text", "video"}:
-        raise HTTPException(status_code=400, detail="media_type must be text or video")
+    if media_type not in {"text", "video", "image"}:
+        raise HTTPException(status_code=400, detail="media_type must be text, video, or image")
 
     filename = file.filename or "upload.bin"
     suffix = filename.lower().rsplit(".", 1)
@@ -66,11 +67,15 @@ async def upload_artifact(
         raise HTTPException(status_code=400, detail=f"Unsupported text file extension: {extension}")
     if media_type == "video" and extension not in VIDEO_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Unsupported video file extension: {extension}")
+    if media_type == "image" and extension not in IMAGE_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f"Unsupported image file extension: {extension}")
 
     content = await file.read()
     size_bytes = len(content)
 
-    max_size_mb = settings.max_text_mb if media_type == "text" else settings.max_video_mb
+    max_size_mb = settings.max_text_mb if media_type == "text" else (
+        settings.max_image_mb if media_type == "image" else settings.max_video_mb
+    )
     if size_bytes > max_size_mb * 1024 * 1024:
         raise HTTPException(status_code=400, detail=f"File too large. Max {max_size_mb}MB for {media_type}.")
 

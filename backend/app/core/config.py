@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     max_text_mb: int = 50
     max_video_mb: int = 1024
     max_video_seconds: int = 900
+    max_image_mb: int = 50
 
     allowed_jurisdictions: str = "SG"
     default_jurisdiction: str = "SG"
