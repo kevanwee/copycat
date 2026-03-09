@@ -360,5 +360,51 @@ def render_report_pdf(report: dict[str, Any], output_path: str | Path) -> str:
         ]))
         story.append(disc_table)
 
-    doc.build(story)
+    try:
+        doc.build(story)
+    except TypeError as exc:
+        message = str(exc)
+        if "NoneType" not in message or "iterable" not in message:
+            raise
+
+        fallback_doc = BaseDocTemplate(
+            str(path),
+            pagesize=A4,
+            leftMargin=15 * mm,
+            rightMargin=15 * mm,
+            topMargin=22 * mm,
+            bottomMargin=16 * mm,
+        )
+        fallback_doc.addPageTemplates([_build_page_template(fallback_doc)])
+
+        fallback_story: list[Any] = []
+        fallback_story.append(Paragraph("Evidence Triage Report", S["h1"]))
+        fallback_story.append(Spacer(1, 3 * mm))
+        fallback_story.append(Paragraph(f"Case ID: {report.get('case_id', '—')}", S["body"]))
+        fallback_story.append(Paragraph(f"Media Type: {str(report.get('media_type', '—')).title()}", S["body"]))
+        fallback_story.append(Paragraph(f"Risk Band: {report.get('risk_band', 'UNKNOWN')}", S["body"]))
+        fallback_story.append(
+            Paragraph(
+                f"Headline Overlap: {float(report.get('headline_overlap_percentage', 0) or 0):.1f}%",
+                S["body"],
+            ),
+        )
+
+        component_scores = report.get("component_scores", {})
+        if isinstance(component_scores, dict) and component_scores:
+            fallback_story.append(Spacer(1, 4 * mm))
+            fallback_story.append(Paragraph("Component Scores", S["h2"]))
+            for key, value in component_scores.items():
+                if isinstance(value, (int, float)):
+                    fallback_story.append(Paragraph(f"- {key}: {value:.6f}", S["body"]))
+
+        fallback_story.append(Spacer(1, 4 * mm))
+        fallback_story.append(
+            Paragraph(
+                "Fallback PDF renderer was used because advanced table styling failed.",
+                S["muted"],
+            ),
+        )
+        fallback_doc.build(fallback_story)
+
     return str(path)
