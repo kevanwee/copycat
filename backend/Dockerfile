@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Constrain setuptools in pip build-isolation envs so pkg_resources is available
+RUN echo "setuptools<70" > /tmp/pip-constraints.txt
+ENV PIP_CONSTRAINT=/tmp/pip-constraints.txt
 
 COPY requirements.txt /app/requirements.txt
 COPY requirements-video.txt /app/requirements-video.txt
