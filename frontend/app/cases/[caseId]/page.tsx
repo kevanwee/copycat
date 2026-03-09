@@ -38,6 +38,10 @@ const SCORE_LABELS: Record<string, string> = {
   V2_ssim: "Structural Similarity (SSIM)",
   V3_psnr_supporting: "PSNR (supporting)",
   V4_transcript_similarity: "Transcript Similarity",
+  I1_phash_similarity: "Perceptual Hash",
+  I2_color_histogram: "Colour Histogram",
+  I3_ssim: "Structural Similarity (SSIM)",
+  I4_orb_feature_match: "ORB Feature Match",
 };
 
 function getRiskColor(band: string) {

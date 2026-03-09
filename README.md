@@ -1,6 +1,6 @@
 # Copycat
 
-**Singapore-first copyright infringement triage tool** with deterministic similarity scoring.
+**Singapore-first copyright infringement triage tool** with deterministic similarity scoring for **text, video, and image** works.
 
 > ⚠ Triage only. Not legal advice. Source files are auto-deleted after 24 hours.
 
@@ -121,16 +121,45 @@ Four metrics are computed over sampled frames and optional transcripts:
 |----|------|--------|-------------|
 | **V1** | Frame pHash Alignment | 50 % | Perceptual hash (pHash) Hamming similarity averaged over monotonically aligned frame pairs, multiplied by temporal coverage. The monotonic alignment uses an 8-frame lookahead and a 0.55 similarity threshold to find matching frame sequences in presentation order. |
 | **V2** | SSIM | 20 % | Structural Similarity Index (SSIM) averaged over the same aligned frame pairs. Measures luminance, contrast, and structural differences at the pixel level. Requires `opencv` + `scikit-image` extras. |
-| **V3** | PSNR (supporting) | — | Peak Signal-to-Noise Ratio, normalised to [0, 1] by dividing by 50 dB. Reported as a diagnostic metric but **not included** in the headline formula. |
-| **V4** | Transcript Similarity | 30 % | Full text-similarity pipeline (M1–M4 composite) applied to Whisper-generated transcripts of both videos. Falls back to 0 if neither video has a transcript. |
+| **V3** | PSNR (supporting) | 7 % | Peak Signal-to-Noise Ratio, normalised to [0, 1] by dividing by 50 dB. Penalises pixel-level distortion introduced by encoding rather than genuine content differences. |
+| **V4** | Transcript Similarity | 30 % | Full text-similarity pipeline (M1–M4 composite) applied to Whisper-generated transcripts of both videos. Falls back to a visual-only formula when neither video has a transcript. |
+
+**Headline formula (audio present):**
+
+```
+score = 0.45 × V1 + 0.18 × V2 + 0.07 × V3 + 0.30 × V4
+```
+
+**Fallback (no transcripts):**
+
+```
+score = 0.75 × V1 + 0.25 × V2
+```
+
+> V2 and V3 are only computed when `opencv-python-headless` and `scikit-image` are installed (`requirements-video.txt`). V4 requires `openai-whisper`.
+
+---
+
+### Image Similarity
+
+Four metrics are computed over normalised (max 1024 × 1024 px, RGB) image pairs:
+
+| ID | Name | Weight | Description |
+|----|------|--------|-------------|
+| **I1** | Perceptual Hash | 35 % | pHash Hamming similarity — tolerance to minor colour shifts, compression artefacts, and small crops. Fast and robust to minor transformations. |
+| **I2** | Colour Histogram | 20 % | Bhattacharyya-coefficient similarity of per-channel (R, G, B) normalised histograms. Detects global colour palette reuse independent of spatial layout. |
+| **I3** | SSIM | 30 % | Structural Similarity Index (SSIM), computed on grey-scale thumbnails (256 × 256). Measures luminance, contrast, and structural detail simultaneously. |
+| **I4** | ORB Feature Match | 15 % | ORB keypoint descriptor matching (Brute-Force Hamming). Ratio of good matches (< 64 Hamming distance) to the closest 500 keypoints found. Detects local structural reuse even after rescaling or repositioning. |
 
 **Headline formula:**
 
 ```
-score = 0.50 × V1 + 0.20 × V2 + 0.30 × V4
+score = 0.35 × I1 + 0.20 × I2 + 0.30 × I3 + 0.15 × I4
 ```
 
-> V2 and V3 are only computed when `opencv-python-headless` and `scikit-image` are installed (`requirements-video.txt`). V4 requires `openai-whisper`.
+> I2, I3, and I4 require `Pillow`, `opencv-python-headless`, `scikit-image`, and `imagehash` — all bundled in `requirements-video.txt`. No additional installation is needed if video requirements are already installed.
+
+**Accepted image formats:** JPG/JPEG, PNG, WEBP, GIF, BMP, TIFF/TIF.
 
 ---
 

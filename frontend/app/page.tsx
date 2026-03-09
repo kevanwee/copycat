@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 
 import { createCase, getJob, startAnalysis, uploadArtifact } from "../lib/api";
 
-type MediaType = "text" | "video";
+type MediaType = "text" | "video" | "image";
 
 const STEPS = ["Creating case", "Uploading original", "Uploading alleged copy", "Starting analysis", "Processing"];
 
@@ -20,7 +20,8 @@ export default function HomePage() {
 
   const textAccept = ".txt,.pdf,.docx";
   const videoAccept = ".mp4,.mov,.mkv,.avi";
-  const accept = mediaType === "text" ? textAccept : videoAccept;
+  const imageAccept = ".jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff";
+  const accept = mediaType === "text" ? textAccept : mediaType === "image" ? imageAccept : videoAccept;
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -79,7 +80,7 @@ export default function HomePage() {
           Upload both files and receive a scored similarity report in seconds.
         </p>
         <span className="notice">
-          ⚠ Triage only &mdash; not legal advice &middot; Files auto-deleted after 24 h
+          ⚠ Triage only &mdash; not legal advice &middot; Files auto-deleted after 24 h &middot; Text, Video &amp; Image comparison
         </span>
       </div>
 
@@ -111,6 +112,16 @@ export default function HomePage() {
                 />
                 <span>🎬 Video vs Video</span>
               </label>
+              <label>
+                <input
+                  type="radio"
+                  name="mediaType"
+                  value="image"
+                  checked={mediaType === "image"}
+                  onChange={() => { setMediaType("image"); setOriginalFile(null); setAllegedFile(null); }}
+                />
+                <span>🎨 Image vs Image</span>
+              </label>
             </div>
           </div>
 
@@ -130,7 +141,7 @@ export default function HomePage() {
                   ? <span className="upload-filename">{originalFile.name}</span>
                   : <>
                       <span className="upload-text">Click to select original</span>
-                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : "MP4, MOV, MKV, AVI"}</span>
+                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : mediaType === "image" ? "JPG, PNG, WEBP, GIF, BMP, TIFF" : "MP4, MOV, MKV, AVI"}</span>
                     </>
                 }
               </div>
@@ -150,7 +161,7 @@ export default function HomePage() {
                   ? <span className="upload-filename">{allegedFile.name}</span>
                   : <>
                       <span className="upload-text">Click to select alleged copy</span>
-                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : "MP4, MOV, MKV, AVI"}</span>
+                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : mediaType === "image" ? "JPG, PNG, WEBP, GIF, BMP, TIFF" : "MP4, MOV, MKV, AVI"}</span>
                     </>
                 }
               </div>
@@ -177,6 +188,7 @@ export default function HomePage() {
         {[
           { icon: "🔢", label: "Deterministic", desc: "Same inputs always produce the same score" },
           { icon: "⚖️", label: "SG-First", desc: "Rule pack calibrated to Singapore Copyright Act" },
+          { icon: "🎨", label: "3 Media Types", desc: "Text, video, and image comparison supported" },
           { icon: "🔒", label: "No retention", desc: "Source files purged after 24 hours" },
         ].map((f) => (
           <div key={f.label}>
