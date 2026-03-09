@@ -26,7 +26,7 @@ export async function createCase() {
 export async function uploadArtifact(
   caseId: string,
   role: "original" | "alleged",
-  mediaType: "text" | "video",
+  mediaType: "text" | "video" | "image",
   file: File,
 ) {
   const form = new FormData();

@@ -26,8 +26,7 @@ def test_legal_engine_subsistence_yes() -> None:
     assert any(n.node_id == "subsistence_overall" and n.answer == "yes" for n in nodes)
 
     risk = compute_risk_band(answers, similarity_score=0.82)
-    assert risk == "high"
-
+    assert risk == "HIGH"
 
 
 def test_legal_engine_fair_use_downgrades_risk() -> None:
@@ -49,4 +48,4 @@ def test_legal_engine_fair_use_downgrades_risk() -> None:
 
     _, answers = evaluate_rulepack(rulepack, facts)
     risk = compute_risk_band(answers, similarity_score=0.82)
-    assert risk == "medium"
+    assert risk == "MEDIUM"

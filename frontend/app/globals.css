@@ -233,39 +233,43 @@ select:focus { border-color: var(--accent); }
 
 /* ─── TYPE TOGGLE ────────────────────────────── */
 .type-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: var(--surface-2);
 }
 
 .type-toggle label {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 7px;
+  padding: 9px 12px;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--muted);
-  transition: background 0.15s, color 0.15s;
-  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  transition: background 0.14s, color 0.14s, box-shadow 0.14s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.type-toggle label:hover {
+  background: var(--border-subtle);
+  color: var(--text);
 }
 
 .type-toggle input[type="radio"] { display: none; }
-
-.type-toggle input[type="radio"]:checked + span {
-  background: var(--accent);
-  color: #fff;
-}
 
 .type-toggle label:has(input:checked) {
   background: var(--accent);
   color: #fff;
   font-weight: 600;
+  box-shadow: 0 1px 6px rgba(244,93,34,0.30);
 }
 
 /* ─── FILE UPLOAD ────────────────────────────── */
