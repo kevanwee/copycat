@@ -212,7 +212,6 @@ def render_report_pdf(report: dict[str, Any], output_path: str | Path) -> str:
         ("BACKGROUND", (0, 0), (0, -1), STONE_LIGHT),
         ("BACKGROUND", (1, 0), (1, -2), WHITE),
         ("BACKGROUND", (1, -1), (1, -1), risk_col),
-        ("ROWBACKGROUNDS", (0, 0), (-1, -1), None),
         ("BOX", (0, 0), (-1, -1), 0.5, STONE_LIGHT),
         ("INNERGRID", (0, 0), (-1, -1), 0.25, STONE_LIGHT),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
