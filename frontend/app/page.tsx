@@ -5,19 +5,27 @@ import { FormEvent, useState } from "react";
 
 import { createCase, getJob, startAnalysis, uploadArtifact } from "../lib/api";
 
+type MediaType = "text" | "video";
+
+const STEPS = ["Creating case", "Uploading original", "Uploading alleged copy", "Starting analysis", "Processing"];
+
 export default function HomePage() {
   const router = useRouter();
-  const [mediaType, setMediaType] = useState<"text" | "video">("text");
+  const [mediaType, setMediaType] = useState<MediaType>("text");
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [allegedFile, setAllegedFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<string>("Idle");
+  const [statusMsg, setStatusMsg] = useState<string>("");
   const [error, setError] = useState<string>("");
+
+  const textAccept = ".txt,.pdf,.docx";
+  const videoAccept = ".mp4,.mov,.mkv,.avi";
+  const accept = mediaType === "text" ? textAccept : videoAccept;
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!originalFile || !allegedFile) {
-      setError("Please upload both original and alleged files.");
+      setError("Please select both an original and an alleged copy file.");
       return;
     }
 
@@ -25,24 +33,24 @@ export default function HomePage() {
     setBusy(true);
 
     try {
-      setStatus("Creating case");
+      setStatusMsg(STEPS[0]);
       const caseResp = await createCase();
       const caseId = caseResp.case_id;
 
-      setStatus("Uploading original artifact");
+      setStatusMsg(STEPS[1]);
       await uploadArtifact(caseId, "original", mediaType, originalFile);
 
-      setStatus("Uploading alleged artifact");
+      setStatusMsg(STEPS[2]);
       await uploadArtifact(caseId, "alleged", mediaType, allegedFile);
 
-      setStatus("Starting analysis");
+      setStatusMsg(STEPS[3]);
       const analyzeResp = await startAnalysis(caseId);
 
-      setStatus("Processing");
+      setStatusMsg(STEPS[4]);
       for (;;) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         const job = await getJob(analyzeResp.job_id);
-        setStatus(`Job: ${job.stage} (${Math.round(job.progress * 100)}%)`);
+        setStatusMsg(`Processing \u2014 ${job.stage ?? "working"} (${Math.round(job.progress * 100)}%)`);
 
         if (job.status === "completed") {
           router.push(`/cases/${caseId}`);
@@ -61,48 +69,123 @@ export default function HomePage() {
 
   return (
     <main className="shell">
-      <section className="hero-card">
-        <h1>Copycat</h1>
-        <p>Deterministic Singapore-first copyright triage and overlap analysis.</p>
-        <p className="notice">Triage only. Not legal advice. Uploaded source files auto-delete in 24 hours.</p>
-      </section>
+      {/* Hero */}
+      <div className="hero">
+        <h1>
+          <span className="brand">Copycat</span> Copyright Triage
+        </h1>
+        <p className="sub">
+          Deterministic overlap analysis for text and video works under Singapore copyright law.
+          Upload both files and receive a scored similarity report in seconds.
+        </p>
+        <span className="notice">
+          ⚠ Triage only &mdash; not legal advice &middot; Files auto-deleted after 24 h
+        </span>
+      </div>
 
-      <section className="panel">
+      {/* Form card */}
+      <div className="card">
         <form onSubmit={onSubmit} className="form-grid">
-          <label>
-            Media Type
-            <select value={mediaType} onChange={(e) => setMediaType(e.target.value as "text" | "video") }>
-              <option value="text">Text vs Text</option>
-              <option value="video">Video vs Video</option>
-            </select>
-          </label>
 
-          <label>
-            Original Work
-            <input
-              type="file"
-              onChange={(e) => setOriginalFile(e.target.files?.[0] ?? null)}
-              accept={mediaType === "text" ? ".txt,.pdf,.docx" : ".mp4,.mov,.mkv,.avi"}
-            />
-          </label>
+          {/* Media type toggle */}
+          <div className="field">
+            <span className="field-label">Comparison type</span>
+            <div className="type-toggle">
+              <label>
+                <input
+                  type="radio"
+                  name="mediaType"
+                  value="text"
+                  checked={mediaType === "text"}
+                  onChange={() => { setMediaType("text"); setOriginalFile(null); setAllegedFile(null); }}
+                />
+                <span>📄 Text vs Text</span>
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="mediaType"
+                  value="video"
+                  checked={mediaType === "video"}
+                  onChange={() => { setMediaType("video"); setOriginalFile(null); setAllegedFile(null); }}
+                />
+                <span>🎬 Video vs Video</span>
+              </label>
+            </div>
+          </div>
 
-          <label>
-            Alleged Work
-            <input
-              type="file"
-              onChange={(e) => setAllegedFile(e.target.files?.[0] ?? null)}
-              accept={mediaType === "text" ? ".txt,.pdf,.docx" : ".mp4,.mov,.mkv,.avi"}
-            />
-          </label>
+          {/* Upload zones */}
+          <div className="form-row">
+            <div className="field">
+              <span className="field-label">Original work</span>
+              <div className={`upload-zone${originalFile ? " filled" : ""}`}>
+                <input
+                  type="file"
+                  accept={accept}
+                  onChange={(e) => setOriginalFile(e.target.files?.[0] ?? null)}
+                  disabled={busy}
+                />
+                <span className="upload-icon">{originalFile ? "✅" : "📂"}</span>
+                {originalFile
+                  ? <span className="upload-filename">{originalFile.name}</span>
+                  : <>
+                      <span className="upload-text">Click to select original</span>
+                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : "MP4, MOV, MKV, AVI"}</span>
+                    </>
+                }
+              </div>
+            </div>
 
-          <button type="submit" disabled={busy}>
-            {busy ? "Running..." : "Run Analysis"}
+            <div className="field">
+              <span className="field-label">Alleged copy</span>
+              <div className={`upload-zone${allegedFile ? " filled" : ""}`}>
+                <input
+                  type="file"
+                  accept={accept}
+                  onChange={(e) => setAllegedFile(e.target.files?.[0] ?? null)}
+                  disabled={busy}
+                />
+                <span className="upload-icon">{allegedFile ? "✅" : "📂"}</span>
+                {allegedFile
+                  ? <span className="upload-filename">{allegedFile.name}</span>
+                  : <>
+                      <span className="upload-text">Click to select alleged copy</span>
+                      <span className="upload-accept">{mediaType === "text" ? "TXT, PDF, DOCX" : "MP4, MOV, MKV, AVI"}</span>
+                    </>
+                }
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={busy} style={{ justifySelf: "start" }}>
+            {busy ? <><span className="spinner" /> Running analysis…</> : "Run Analysis →"}
           </button>
         </form>
 
-        <div className="status">{status}</div>
-        {error && <div className="error">{error}</div>}
-      </section>
+        {busy && statusMsg && (
+          <div className="status-strip">
+            <span className="spinner" />
+            {statusMsg}
+          </div>
+        )}
+
+        {error && <div className="alert alert-error">{error}</div>}
+      </div>
+
+      {/* Info strip */}
+      <div className="card-sm" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px" }}>
+        {[
+          { icon: "🔢", label: "Deterministic", desc: "Same inputs always produce the same score" },
+          { icon: "⚖️", label: "SG-First", desc: "Rule pack calibrated to Singapore Copyright Act" },
+          { icon: "🔒", label: "No retention", desc: "Source files purged after 24 hours" },
+        ].map((f) => (
+          <div key={f.label}>
+            <div style={{ fontSize: "1.3rem", marginBottom: 4 }}>{f.icon}</div>
+            <div style={{ fontWeight: 600, fontSize: "0.875rem" }}>{f.label}</div>
+            <div style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: 2 }}>{f.desc}</div>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }
