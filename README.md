@@ -55,6 +55,144 @@
 
 ---
 
+## Architecture
+
+### System Overview
+
+```mermaid
+graph TD
+    subgraph Client["Client Browser"]
+        FE["Next.js 14 Frontend\nVercel"]
+    end
+
+    subgraph Backend["Backend — Render (Docker)"]
+        API["FastAPI\n/api/v1"]
+        WORKER["Celery Worker\n(eager / Redis)"]
+        DB[("SQLite\nCaseReport · Job · Artifact")]
+        FS[("Filesystem\n/tmp/uploads · /tmp/reports")]
+    end
+
+    subgraph Pipeline["Analysis Pipeline"]
+        EXT["Extraction\ntext · image · video"]
+        SIM["Similarity Engine\nM1-M4 · I1-I4 · V1-V4"]
+        LEGAL["Legal Engine\nSG Rule Pack v1"]
+        PDF["ReportLab\nPDF Renderer"]
+    end
+
+    FE -->|"REST (HTTPS)"| API
+    API -->|"store artifacts"| FS
+    API -->|"write case/job"| DB
+    API -->|"enqueue task"| WORKER
+    WORKER --> EXT
+    EXT --> SIM
+    SIM --> LEGAL
+    LEGAL --> PDF
+    PDF -->|"write report"| FS
+    WORKER -->|"update job status"| DB
+    FE -->|"poll job status"| API
+    FE -->|"fetch report JSON + PDF"| API
+    API -->|"read"| DB
+    API -->|"read"| FS
+```
+
+### Analysis Pipeline
+
+```mermaid
+flowchart LR
+    UP["Upload\n2 files"] --> CASE["Create Case\n& Artifacts"]
+    CASE --> ANALYZE["POST /analyze\nEnqueue Job"]
+    ANALYZE --> EXTRACT
+
+    subgraph EXTRACT["1 · Extraction  (10%)"]
+        direction TB
+        TXT["PDF / DOCX / TXT\n→ raw text"]
+        IMG["JPG / PNG / WEBP\n→ 1024px RGB norm"]
+        VID["MP4 / MOV / MKV\n→ frames + Whisper"]
+    end
+
+    EXTRACT --> SCORE
+
+    subgraph SCORE["2 · Similarity Scoring  (40–55%)"]
+        direction TB
+        TEXT_SIM["Text  M1 5-gram · M2 LCS\nM3 TF-IDF · M4 NER"]
+        IMG_SIM["Image  I1 pHash · I2 Histogram\nI3 SSIM · I4 ORB"]
+        VID_SIM["Video  V1 pHash align · V2 SSIM\nV3 PSNR · V4 Transcript"]
+    end
+
+    SCORE --> LEGAL
+
+    subgraph LEGAL["3 · Legal Triage  (75%)"]
+        direction TB
+        SUB["Subsistence\nwork category · originality · SG connection"]
+        INF["Infringement\nownership · acts · no authorisation"]
+        SUB_TAKE["Substantial Taking\nquality + similarity threshold"]
+        EXC["Exceptions\nfair use signal"]
+        RISK["Risk Band\nLOW · MEDIUM · HIGH"]
+        SUB --> INF --> SUB_TAKE --> EXC --> RISK
+    end
+
+    LEGAL --> REPORT
+
+    subgraph REPORT["4 · Report  (90–100%)"]
+        JSON["report_json\n(DB)"]
+        PDFOUT["PDF\n(filesystem)"]
+    end
+
+    REPORT --> DONE["Job: completed\nFrontend navigates\nto report page"]
+```
+
+### Data Model
+
+```mermaid
+erDiagram
+    CASE {
+        string id PK
+        string jurisdiction
+        string status
+        json metadata_json
+        datetime created_at
+    }
+    ARTIFACT {
+        string id PK
+        string case_id FK
+        string role "original | alleged"
+        string media_type "text | image | video"
+        string filename
+        string checksum_sha256
+        string storage_path
+        int size_bytes
+    }
+    JOB {
+        string id PK
+        string case_id FK
+        string status "queued | running | completed | failed"
+        string stage
+        float progress
+        text error
+        datetime updated_at
+    }
+    SIMILARITY_METRIC {
+        string id PK
+        string case_id FK
+        string metric_code
+        float score
+        json component_payload
+    }
+    CASE_REPORT {
+        string id PK
+        string case_id FK
+        json report_json
+        datetime generated_at
+    }
+
+    CASE ||--o{ ARTIFACT : "has"
+    CASE ||--o{ JOB : "has"
+    CASE ||--o| CASE_REPORT : "has"
+    CASE ||--o{ SIMILARITY_METRIC : "has"
+```
+
+---
+
 ## Quick start (Docker)
 
 ```bash
