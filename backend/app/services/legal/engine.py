@@ -42,6 +42,9 @@ def _score_gte(facts: dict[str, Any], fact: str, threshold: float) -> bool | Non
 
 
 def _evaluate_expression(expr: dict[str, Any], facts: dict[str, Any], node_answers: dict[str, str]) -> bool | None:
+    if not isinstance(expr, dict):
+        return None
+
     expr_type = expr.get("type")
 
     if expr_type == "fact_bool":
@@ -50,19 +53,27 @@ def _evaluate_expression(expr: dict[str, Any], facts: dict[str, Any], node_answe
         val = _as_bool(facts.get(expr.get("fact")))
         return None if val is None else (not val)
     if expr_type == "all_true":
-        vals = [_as_bool(facts.get(f)) for f in expr.get("facts", [])]
+        facts_list = expr.get("facts") or []
+        if not isinstance(facts_list, list):
+            return None
+        vals = [_as_bool(facts.get(f)) for f in facts_list]
         if any(v is None for v in vals):
             return None
         return all(vals)
     if expr_type == "any_true":
-        vals = [_as_bool(facts.get(f)) for f in expr.get("facts", [])]
+        facts_list = expr.get("facts") or []
+        if not isinstance(facts_list, list):
+            return None
+        vals = [_as_bool(facts.get(f)) for f in facts_list]
         if all(v is None for v in vals):
             return None
         return any(v for v in vals if v is not None)
     if expr_type == "score_gte":
         return _score_gte(facts, expr.get("fact", ""), float(expr.get("threshold", 0.0)))
     if expr_type == "all_nodes_true":
-        nodes = expr.get("nodes", [])
+        nodes = expr.get("nodes") or []
+        if not isinstance(nodes, list):
+            return None
         vals = [node_answers.get(n) for n in nodes]
         if any(v is None for v in vals):
             return None
@@ -77,14 +88,28 @@ def evaluate_rulepack(rulepack: dict[str, Any], facts: dict[str, Any]) -> tuple[
     node_results: list[LegalNodeResult] = []
     node_answers: dict[str, str] = {}
 
-    for node in rulepack.get("nodes", []):
-        derive = node.get("derive", {})
+    nodes = rulepack.get("nodes") or []
+    if not isinstance(nodes, list):
+        nodes = []
+
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+
+        derive = node.get("derive") or {}
+        if not isinstance(derive, dict):
+            derive = {}
         for key, expr in derive.items():
             if key not in facts:
                 facts[key] = _evaluate_expression(expr, facts, node_answers)
 
-        required_facts = node.get("required_facts", [])
-        required_nodes = node.get("required_nodes", [])
+        required_facts = node.get("required_facts") or []
+        if not isinstance(required_facts, list):
+            required_facts = []
+
+        required_nodes = node.get("required_nodes") or []
+        if not isinstance(required_nodes, list):
+            required_nodes = []
 
         known_required_facts = [facts.get(key) is not None for key in required_facts]
         known_required_nodes = [node_answers.get(key) is not None for key in required_nodes]

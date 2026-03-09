@@ -178,7 +178,8 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
 
     _update_job(db, job, status="running", stage="legal_triage", progress=0.75)
 
-    legal_inputs = dict(case.metadata_json.get("legal_inputs", {})) if isinstance(case.metadata_json, dict) else {}
+    raw_legal_inputs = case.metadata_json.get("legal_inputs", {}) if isinstance(case.metadata_json, dict) else {}
+    legal_inputs = raw_legal_inputs if isinstance(raw_legal_inputs, dict) else {}
     legal_facts = {
         "work_category_supported": legal_inputs.get("work_category_supported", True),
         "originality_evidence": legal_inputs.get("originality_evidence", True),
