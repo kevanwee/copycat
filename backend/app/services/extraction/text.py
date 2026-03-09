@@ -64,7 +64,7 @@ def _ocr_pdf_images(reader: PdfReader) -> str:
 
     ocr_chunks: list[str] = []
     for page in reader.pages:
-        images = getattr(page, "images", [])
+        images = getattr(page, "images", None) or []
         for image in images:
             try:
                 with Image.open(io.BytesIO(image.data)) as img:
