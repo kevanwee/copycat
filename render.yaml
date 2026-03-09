@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: copycat-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: COPYCAT_DATABASE_URL
+        value: sqlite:////tmp/copycat.db
+      - key: COPYCAT_STORAGE_ROOT
+        value: /tmp/uploads
+      - key: COPYCAT_REPORT_ROOT
+        value: /tmp/reports
+      - key: COPYCAT_CELERY_TASK_ALWAYS_EAGER
+        value: "true"
+      - key: COPYCAT_ENVIRONMENT
+        value: production
+    healthCheckPath: /health
