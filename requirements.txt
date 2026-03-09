@@ -1,0 +1,49 @@
+# =============================================================
+# Copycat – Python dependency manifest
+# =============================================================
+# Python 3.11+ recommended (required for full video/ML features)
+#
+# Backend core  →  backend/requirements.txt
+# Video extras  →  backend/requirements-video.txt
+#
+# Usage:
+#   pip install -r backend/requirements.txt
+#   pip install -r backend/requirements-video.txt   # optional
+# =============================================================
+
+# ── Core API / worker ─────────────────────────────────────────
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.38
+pydantic==2.10.6
+pydantic-settings==2.7.1
+python-multipart==0.0.20
+celery[redis]==5.4.0
+redis==5.2.1
+python-dateutil==2.9.0.post0
+
+# ── Document extraction ───────────────────────────────────────
+pypdf==5.3.0
+python-docx==1.1.2
+langdetect==1.0.9
+
+# ── Reporting ─────────────────────────────────────────────────
+reportlab==4.3.1
+
+# ── Utilities ─────────────────────────────────────────────────
+ffmpeg-python==0.2.0
+PyYAML==6.0.2
+httpx==0.28.1
+
+# ── Testing ───────────────────────────────────────────────────
+pytest==8.3.4
+pytest-cov==6.0.0
+
+# ── Video / ML extras (install separately, Python 3.11 Linux recommended) ──
+# numpy==2.2.3
+# scikit-learn==1.6.1
+# opencv-python-headless==4.11.0.86
+# Pillow==11.1.0
+# ImageHash==4.3.2
+# scikit-image==0.25.2
+# openai-whisper==20240930
