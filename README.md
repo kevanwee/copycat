@@ -6,6 +6,16 @@
 
 ---
 
+## Live Deployment
+
+| Service | URL |
+|---------|-----|
+| Frontend (Vercel) | https://copycat-mu.vercel.app |
+| Backend API (Render) | https://copycat-5wgw.onrender.com |
+| API Docs (Swagger) | https://copycat-5wgw.onrender.com/docs |
+
+> The Render free tier spins down after inactivity — the first request after a cold start may take ~30 s.
+
 ---
 
 ## Stack
@@ -18,6 +28,18 @@
 | Database | SQLite (dev) / PostgreSQL-ready via SQLAlchemy |
 | Storage | Local filesystem (dev) / S3-compatible abstraction |
 | Reports | ReportLab PDF |
+
+---
+
+## UI Features
+
+| Feature | Details |
+|---------|---------|
+| **Upload form** | Drag-and-drop / click upload; text, image, and video media types |
+| **Live progress** | Polling indicator shows pipeline stage and % completion |
+| **Report page** | Similarity score ring, component score bars, legal reasoning flow, evidence passages, PDF download |
+| **Footer bar** | Site-wide accreditation bar with copyright notice, Singapore Copyright Act link, and **Terms of Use** modal |
+| **Terms of Use modal** | Full Singapore-law-governed ToU (PDPA, warranty disclaimer, liability cap, governing jurisdiction) — opens on click, dismisses on backdrop or button |
 
 ---
 
@@ -188,8 +210,18 @@ The same case files, same rule pack, and same software version always produce th
 
 ---
 
-## Notes
+## Deployment Notes (Render / Docker)
 
-- v1 is **triage only**. It is not legal advice.
-- Rules are calibrated to the **Singapore Copyright Act 2021**.
-- Uploaded source files are retained for **24 hours** by default (`RETENTION_HOURS` env var).
+- The `Dockerfile` pins `setuptools<70` via `PIP_CONSTRAINT` to ensure legacy packages such as `openai-whisper` can build their wheels on Python 3.11.
+- `COPYCAT_CELERY_TASK_ALWAYS_EAGER=true` (default on Render) runs Celery tasks inline — no Redis required for single-instance deployment.
+- PDF generation uses ReportLab Platypus with a styled fallback renderer; if advanced table styling fails (e.g. version skew), a plain-text fallback PDF is produced so the analysis job still completes.
+- All uploaded files and reports are written to `/tmp` on Render (ephemeral storage). Set `COPYCAT_STORAGE_ROOT` and `COPYCAT_REPORT_ROOT` to a persistent volume path for production use.
+
+---
+
+## Legal & Compliance
+
+- The analysis output is **triage only** and is **not legal advice**.
+- The platform is calibrated to the **Singapore Copyright Act 2021** (No. 22 of 2021).
+- A full **Terms of Use** (governing law: Singapore; PDPA-compliant data-handling disclosures) is accessible from the footer of every page.
+- Uploaded source files are purged after **24 hours** by default (`COPYCAT_RETENTION_HOURS` env var).
