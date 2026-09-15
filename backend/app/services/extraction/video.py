@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import subprocess
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 
 from app.core.config import get_settings
@@ -27,16 +26,6 @@ class VideoExtractionResult:
 
 
 settings = get_settings()
-
-
-@lru_cache(maxsize=1)
-def _get_whisper_model():
-    try:
-        import whisper
-
-        return whisper.load_model(settings.whisper_model_name)
-    except Exception:
-        return None
 
 
 def probe_duration_seconds(path: str | Path) -> float:
@@ -71,18 +60,17 @@ def normalize_video(input_path: str | Path, output_path: str | Path) -> None:
         "fast",
         "-crf",
         "23",
-        "-c:a",
-        "aac",
-        "-ar",
-        "16000",
-        "-ac",
+        "-an",
+        "-threads",
         "1",
         str(output_path),
     ]
     subprocess.run(cmd, check=True, capture_output=True, timeout=300)
 
 
-def extract_frames_with_hashes(video_path: str | Path, out_dir: str | Path) -> list[FrameSample]:
+def extract_frames_with_hashes(
+    video_path: str | Path, out_dir: str | Path
+) -> list[FrameSample]:
     try:
         import cv2
         import imagehash
@@ -111,34 +99,17 @@ def extract_frames_with_hashes(video_path: str | Path, out_dir: str | Path) -> l
         phash = str(imagehash.phash(pil_img))
 
         frames.append(
-            FrameSample(index=idx, timestamp_sec=float(timestamp_sec), path=str(frame_path), phash=phash),
+            FrameSample(
+                index=idx,
+                timestamp_sec=float(timestamp_sec),
+                path=str(frame_path),
+                phash=phash,
+            ),
         )
         idx += 1
 
     capture.release()
     return frames
-
-
-def transcribe_video_audio(video_path: str | Path) -> str:
-    model = _get_whisper_model()
-    if model is None:
-        return ""
-
-    try:
-        result = model.transcribe(
-            str(video_path),
-            task="transcribe",
-            language="en",
-            temperature=0,
-            best_of=1,
-            beam_size=1,
-            condition_on_previous_text=False,
-            fp16=False,
-        )
-        text = result.get("text", "")
-        return text.strip()
-    except Exception:
-        return ""
 
 
 def extract_video(path: str | Path, working_dir: str | Path) -> VideoExtractionResult:

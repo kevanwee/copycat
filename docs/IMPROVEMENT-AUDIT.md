@@ -45,4 +45,56 @@ secondary infringement require explicit routing. Deployment readiness depends
 on the tested configuration, persistent storage and operational supervision;
 the existence of a live baseline URL is not evidence of production readiness.
 
-Implementation and verification results are recorded below as work completes.
+## Implemented outcome
+
+All baseline findings above have corresponding implementation changes and
+regression coverage or operational documentation on `improve/sg-evidence-triage`.
+
+| Area | Delivered |
+|---|---|
+| Legal process | Versioned Singapore framework, 13 explicit assessments, supporting bases, four-factor fair-use worksheet, statutory and judgment links, date/category/route scope checks |
+| Decision logic | Conjunctive legal limbs; separate unknown, contrary, exception and scope outcomes; similarity never supplies legal facts or a probability of infringement |
+| Evidence | Bounded text matching with token positions and coverage, normalized image comparisons, visual video alignment, role-bound hashes and content-derived report identity |
+| Case lifecycle | Case access keys, protected previews/exports, bounded uploads, atomic per-case mutations, background analysis, retry, revision invalidation and complete case deletion |
+| Privacy | Immediate expiry enforcement, periodic source/derived/report/database cleanup, restricted CORS and no-store responses; backup limitations disclosed |
+| UI/UX | Guided three-step intake, explicit unknown answers, legal context help, evidence-first case workspace, prioritized missing facts, editable assessments, PDF/JSON exports and key recovery |
+| Accessibility | Responsive mobile layout, keyboard navigation, focus and error states, reduced motion support and automated browser accessibility checks |
+| Operations | Non-root containers, health checks, persistent local volume, pinned dependencies, generated OpenAPI, setup/runbook and CI build/startup checks |
+
+## Verification evidence
+
+- Local backend suite: **45 passed**, including text, image and generated-video
+  workflows, access isolation, expiry/deletion, content validation, chunked body
+  limits, reproducibility and legal branch regressions. The video test used a
+  checksum-verified FFmpeg build. CI installs FFmpeg explicitly.
+- Browser suite: **3 passed**, exercising the real API, intake, revision,
+  protected reports, exports, deletion, mobile/keyboard use and network recovery.
+  Automated accessibility checks reported no violations in the tested screens.
+- Production frontend build passed. Python unused-name checks, Python formatting
+  and frontend formatting are enforced in CI.
+- `pip-audit` and `npm audit`: **no known vulnerabilities** at verification time.
+- GitHub run [34981983970](https://github.com/kevanwee/copycat/actions/runs/34981983970)
+  passed backend, frontend, browser and container build/startup checks for the
+  deployment checkpoint. Later commits are subject to the same CI checks.
+- Reviewed screenshots: [desktop intake](../screenshots/triage-desktop.png),
+  [mobile intake](../screenshots/triage-mobile.png),
+  [case report](../screenshots/report-desktop.png).
+
+## Remaining release boundaries
+
+- This is a working triage application with supplied legal assessments. It does
+  not independently prove ownership, copying, substantiality or fair use. The
+  [legal framework](legal/sg-framework-v2.md) records the reviewed sources and
+  gaps in automated source verification. Historical law, foreign qualification
+  instruments, other right categories and indirect infringement require review.
+- Visual video analysis excludes audio/transcripts. Scanned PDFs need readable
+  text supplied separately. Similarity weights are transparent heuristics and
+  have not been calibrated as a legal classifier against an adjudicated corpus.
+- The supported local deployment uses one API process and local persistent
+  storage. Public operation needs HTTPS, external ingress rate/time/resource
+  limits, capacity testing, backup policy and operational supervision, as set
+  out in the [runbook](ops/runbook.md). It has no account-based team tenancy.
+- Accessibility automation does not replace a full assistive-technology audit.
+  Tests cover representative workflows, not every browser or hostile file.
+- Changes are staged as progressive GitHub commits for review. They do not
+  establish that an older hosted baseline has been upgraded or deployed.

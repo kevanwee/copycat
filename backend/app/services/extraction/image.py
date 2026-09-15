@@ -17,12 +17,16 @@ class ImageExtractionResult:
 _NORMALIZE_SIZE = (1024, 1024)
 
 
-def extract_image(path: str | Path, working_dir: str | Path | None = None) -> ImageExtractionResult:
+def extract_image(
+    path: str | Path, working_dir: str | Path | None = None
+) -> ImageExtractionResult:
     """Open an image, convert to RGB, save a normalised copy for comparison."""
     try:
         from PIL import Image
     except ImportError as exc:
-        raise RuntimeError("Pillow is required for image extraction. Install requirements-video.txt.") from exc
+        raise RuntimeError(
+            "Pillow is required for image extraction. Install requirements-video.txt."
+        ) from exc
 
     source = Path(path)
     img = Image.open(source)
@@ -30,6 +34,7 @@ def extract_image(path: str | Path, working_dir: str | Path | None = None) -> Im
     orig_w, orig_h = img.size
 
     from PIL import ImageOps
+
     rgb = ImageOps.exif_transpose(img).convert("RGB")
     rgb.thumbnail(_NORMALIZE_SIZE, Image.LANCZOS)
 

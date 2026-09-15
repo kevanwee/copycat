@@ -3,7 +3,6 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,7 +35,6 @@ class Settings(BaseSettings):
     scoring_version: str = "v2.0.0"
     rule_pack_version: str = "sg_v2"
 
-    whisper_model_name: str = "base"
     ffmpeg_bin: str = "ffmpeg"
     ffprobe_bin: str = "ffprobe"
 
@@ -44,7 +42,11 @@ class Settings(BaseSettings):
 
     @property
     def allowed_jurisdictions_list(self) -> list[str]:
-        return [j.strip().upper() for j in self.allowed_jurisdictions.split(",") if j.strip()]
+        return [
+            j.strip().upper()
+            for j in self.allowed_jurisdictions.split(",")
+            if j.strip()
+        ]
 
 
 @lru_cache

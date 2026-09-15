@@ -14,9 +14,15 @@ def run_case_analysis(*, case_id: str, job_id: str) -> dict:
     try:
         return analyze_case_job(db, case_id=case_id, job_id=job_id)
     except Exception as exc:
-        logging.getLogger(__name__).error("Analysis failed for job %s (%s)", job_id, type(exc).__name__)
+        logging.getLogger(__name__).error(
+            "Analysis failed for job %s (%s)", job_id, type(exc).__name__
+        )
         db.rollback()
-        message = str(exc) if isinstance(exc, ValueError) else "Analysis could not complete. Check the files and retry; contact the operator if it persists."
+        message = (
+            str(exc)
+            if isinstance(exc, ValueError)
+            else "Analysis could not complete. Check the files and retry; contact the operator if it persists."
+        )
         job = db.query(Job).filter(Job.id == job_id).first()
         if job is not None:
             job.status = "failed"

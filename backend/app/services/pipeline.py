@@ -19,7 +19,15 @@ from app.services.similarity.image_similarity import compute_image_similarity
 settings = get_settings()
 
 
-def _update_job(db: Session, job: Job, *, status: str, stage: str, progress: float, error: str | None = None) -> None:
+def _update_job(
+    db: Session,
+    job: Job,
+    *,
+    status: str,
+    stage: str,
+    progress: float,
+    error: str | None = None,
+) -> None:
     job.status = status
     job.stage = stage
     job.progress = progress
@@ -55,10 +63,24 @@ def _validate_pair(artifacts: list[Artifact]) -> str:
     return media_type
 
 
-def _upsert_metric(db: Session, case_id: str, metric_code: str, score: float, payload: dict) -> None:
-    existing = db.query(SimilarityMetric).filter(SimilarityMetric.case_id == case_id, SimilarityMetric.metric_code == metric_code).first()
+def _upsert_metric(
+    db: Session, case_id: str, metric_code: str, score: float, payload: dict
+) -> None:
+    existing = (
+        db.query(SimilarityMetric)
+        .filter(
+            SimilarityMetric.case_id == case_id,
+            SimilarityMetric.metric_code == metric_code,
+        )
+        .first()
+    )
     if existing is None:
-        existing = SimilarityMetric(case_id=case_id, metric_code=metric_code, score=score, component_payload=payload)
+        existing = SimilarityMetric(
+            case_id=case_id,
+            metric_code=metric_code,
+            score=score,
+            component_payload=payload,
+        )
     else:
         existing.score = score
         existing.component_payload = payload
@@ -74,9 +96,15 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
     if job is None:
         raise ValueError(f"Job not found: {job_id}")
 
-    artifacts = db.query(Artifact).filter(Artifact.case_id == case_id).order_by(Artifact.created_at.asc()).all()
+    artifacts = (
+        db.query(Artifact)
+        .filter(Artifact.case_id == case_id)
+        .order_by(Artifact.created_at.asc())
+        .all()
+    )
     from app.services.access import expires_at
     from datetime import UTC, datetime
+
     if datetime.now(UTC) >= expires_at(case):
         raise ValueError("Case has expired. Create a new comparison.")
     case.status = "running"
@@ -134,8 +162,16 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
             "evidence": {
                 **sim.evidence,
                 "dimensions": {
-                    "original": {"width": original_extraction.width, "height": original_extraction.height, "format": original_extraction.format},
-                    "alleged": {"width": alleged_extraction.width, "height": alleged_extraction.height, "format": alleged_extraction.format},
+                    "original": {
+                        "width": original_extraction.width,
+                        "height": original_extraction.height,
+                        "format": original_extraction.format,
+                    },
+                    "alleged": {
+                        "width": alleged_extraction.width,
+                        "height": alleged_extraction.height,
+                        "format": alleged_extraction.format,
+                    },
                 },
             },
         }

@@ -1,0 +1,4 @@
+-r requirements.txt
+-r requirements-image.txt
+ruff==0.16.7
+pip-audit==2.10.1

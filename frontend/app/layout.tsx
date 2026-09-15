@@ -5,14 +5,21 @@ import FooterBar from "./components/FooterBar";
 
 export const metadata: Metadata = {
   title: "Copycat — Copyright Triage",
-  description: "Singapore-first deterministic copyright overlap analysis and triage tool",
+  description:
+    "Singapore-first deterministic copyright overlap analysis and triage tool",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
-        <a href="#main" className="skip-link">Skip to content</a>
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
         <nav className="nav" aria-label="Main navigation">
           <Link href="/" className="nav-logo">
             <span className="nav-logo-dot" />

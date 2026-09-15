@@ -7,7 +7,9 @@ from app.db.models import Case
 
 
 def expires_at(case):
-    return case.created_at.replace(tzinfo=UTC) + timedelta(hours=get_settings().retention_hours)
+    return case.created_at.replace(tzinfo=UTC) + timedelta(
+        hours=get_settings().retention_hours
+    )
 
 
 def require_case(db, case_id: str, token: str | None):

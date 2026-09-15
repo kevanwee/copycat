@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from pathlib import Path
 import shutil
 from app.core.config import get_settings
 from app.db.models import Case, SimilarityMetric
@@ -24,7 +23,9 @@ def cleanup_expired(db):
     count = 0
     for case in db.query(Case).all():
         # Workers own running files. Expired cases are already inaccessible.
-        if case.status not in {"queued", "running", "uploading"} and expires_at(case) <= datetime.now(UTC):
+        if case.status not in {"queued", "running", "uploading"} and expires_at(
+            case
+        ) <= datetime.now(UTC):
             delete_case_data(db, case)
             count += 1
     return count

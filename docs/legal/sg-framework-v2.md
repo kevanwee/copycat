@@ -103,7 +103,9 @@ HTML numbering. No headings were rewritten and no provisions dataset was
 handwritten. Relevant Parts 2, 3 and 5 and court texts were subsequently fetched
 and read directly. The note paraphrases; it contains no statutory block quotes.
 Automated provision/quotation verification is incomplete and is not claimed.
-Temporary publisher bytes are not a retained source package.
+Temporary publisher bytes are not a verified retained source package. Completion
+cleanup was attempted but rejected by the execution policy; `.legal-tmp/`
+therefore remains local, ignored by Git, pending manual deletion.
 
 ### Official sources consulted
 

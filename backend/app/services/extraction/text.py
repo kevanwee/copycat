@@ -51,9 +51,13 @@ def extract_text_from_txt(path: Path) -> str:
 def extract_text_from_docx(path: Path) -> str:
     doc = Document(str(path))
     from docx.table import Table
+
     return "\n".join(
         "\n".join(" | ".join(cell.text for cell in row.cells) for row in block.rows)
-        if isinstance(block, Table) else block.text for block in doc.iter_inner_content())
+        if isinstance(block, Table)
+        else block.text
+        for block in doc.iter_inner_content()
+    )
 
 
 def _ocr_pdf_images(reader: PdfReader) -> str:
@@ -94,7 +98,9 @@ def extract_text_from_pdf(path: Path) -> str:
     return ""
 
 
-def extract_text(path: str | Path, enforce_english: bool = True) -> TextExtractionResult:
+def extract_text(
+    path: str | Path, enforce_english: bool = True
+) -> TextExtractionResult:
     src = Path(path)
     suffix = src.suffix.lower()
     if suffix == ".txt":

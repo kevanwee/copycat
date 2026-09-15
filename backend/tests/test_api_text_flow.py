@@ -1,19 +1,24 @@
 from __future__ import annotations
 
 
-
 def test_text_case_api_flow(client):
-    create_resp = client.post("/api/v1/cases", json={"jurisdiction": "SG", "metadata": {}})
+    create_resp = client.post(
+        "/api/v1/cases", json={"jurisdiction": "SG", "metadata": {}}
+    )
     assert create_resp.status_code == 200
     case_id = create_resp.json()["case_id"]
     client.headers["X-Case-Token"] = create_resp.json()["access_token"]
 
-    files = {"file": ("original.txt", b"hello singapore copyright law text", "text/plain")}
+    files = {
+        "file": ("original.txt", b"hello singapore copyright law text", "text/plain")
+    }
     data = {"role": "original", "media_type": "text"}
     up1 = client.post(f"/api/v1/cases/{case_id}/artifacts", files=files, data=data)
     assert up1.status_code == 200
 
-    files2 = {"file": ("alleged.txt", b"hello singapore copyright law text", "text/plain")}
+    files2 = {
+        "file": ("alleged.txt", b"hello singapore copyright law text", "text/plain")
+    }
     data2 = {"role": "alleged", "media_type": "text"}
     up2 = client.post(f"/api/v1/cases/{case_id}/artifacts", files=files2, data=data2)
     assert up2.status_code == 200

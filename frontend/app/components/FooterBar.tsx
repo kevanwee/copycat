@@ -1,3 +1,37 @@
 export default function FooterBar() {
-  return <footer className="footer"><span>Copycat <span aria-hidden="true">/</span> Evidence before conclusions.</span><details><summary>About this assessment & your data</summary><p>Copycat evaluates supplied assessments under a versioned Singapore rulepack. It does not independently verify ownership, determine infringement, or provide a court finding. Technical scores are similarity indices.</p><p>Uploads, evidence notes, derived files and reports are stored on the configured server. Case access expires after the configured retention period. Cleanup runs while the service is active; operators must manage backups separately. Save exports before expiry. Access keys are kept in this browser tab’s session storage, and anyone holding a key can access its case.</p><p>The legal source review date and method limitations appear in each report. Obtain a legal review before acting on a disputed claim.</p></details><a href="https://sso.agc.gov.sg/Act/CA2021" target="_blank" rel="noreferrer">Singapore Copyright Act ↗</a></footer>;
+  return (
+    <footer className="footer">
+      <span>
+        Copycat <span aria-hidden="true">/</span> Evidence before conclusions.
+      </span>
+      <details>
+        <summary>About this assessment & your data</summary>
+        <p>
+          Copycat evaluates supplied assessments under a versioned Singapore
+          rulepack. It does not independently verify ownership, determine
+          infringement, or provide a court finding. Technical scores are
+          similarity indices.
+        </p>
+        <p>
+          Uploads, evidence notes, derived files and reports are stored on the
+          configured server. Case access expires after the configured retention
+          period. Cleanup runs while the service is active; operators must
+          manage backups separately. Save exports before expiry. Access keys are
+          kept in this browser tab’s session storage, and anyone holding a key
+          can access its case.
+        </p>
+        <p>
+          The legal source review date and method limitations appear in each
+          report. Obtain a legal review before acting on a disputed claim.
+        </p>
+      </details>
+      <a
+        href="https://sso.agc.gov.sg/Act/CA2021"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Singapore Copyright Act ↗
+      </a>
+    </footer>
+  );
 }

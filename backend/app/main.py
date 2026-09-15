@@ -23,8 +23,16 @@ async def lifespan(_: FastAPI):
     # Local background jobs do not survive a process restart. Make retry possible.
     if settings.celery_task_always_eager:
         with SessionLocal() as db:
-            db.query(Job).filter(Job.status.in_(["queued", "running"])).update({"status": "failed", "stage": "failed", "error": "Service restarted. Retry analysis."})
-            db.query(Case).filter(Case.status.in_(["queued", "running", "uploading"])).update({"status": "failed"})
+            db.query(Job).filter(Job.status.in_(["queued", "running"])).update(
+                {
+                    "status": "failed",
+                    "stage": "failed",
+                    "error": "Service restarted. Retry analysis.",
+                }
+            )
+            db.query(Case).filter(
+                Case.status.in_(["queued", "running", "uploading"])
+            ).update({"status": "failed"})
             db.commit()
 
     def cleanup():
@@ -36,7 +44,9 @@ async def lifespan(_: FastAPI):
             try:
                 await asyncio.to_thread(cleanup)
             except Exception:
-                logging.getLogger(__name__).error("Case retention cleanup failed; operator action required")
+                logging.getLogger(__name__).error(
+                    "Case retention cleanup failed; operator action required"
+                )
             await asyncio.sleep(settings.cleanup_interval_seconds)
 
     task = asyncio.create_task(cleanup_loop())

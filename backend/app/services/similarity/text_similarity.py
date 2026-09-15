@@ -1,4 +1,5 @@
 """Bounded deterministic text metrics and normalized-token evidence."""
+
 import math
 import re
 from collections import Counter
@@ -23,8 +24,8 @@ def five_gram_jaccard(a, b):
     if not a or not b:
         return 0.0
     n = min(5, len(a), len(b))
-    x = {tuple(a[i:i+n]) for i in range(len(a)-n+1)}
-    y = {tuple(b[i:i+n]) for i in range(len(b)-n+1)}
+    x = {tuple(a[i : i + n]) for i in range(len(a) - n + 1)}
+    y = {tuple(b[i : i + n]) for i in range(len(b) - n + 1)}
     return len(x & y) / len(x | y)
 
 
@@ -72,23 +73,34 @@ def matched_passages(a, b, window=5):
     n = min(window, len(a), len(b))
     lookup = {}
     for i in range(len(a) - n + 1):
-        positions = lookup.setdefault(tuple(a[i:i+n]), [])
+        positions = lookup.setdefault(tuple(a[i : i + n]), [])
         if len(positions) < 8:
             positions.append(i)
     matches, j = [], 0
     while j <= len(b) - n and len(matches) < 50:
-        candidates = lookup.get(tuple(b[j:j+n]), [])
+        candidates = lookup.get(tuple(b[j : j + n]), [])
         best = None
         for i in candidates:
             length = n
-            while i+length < len(a) and j+length < len(b) and a[i+length] == b[j+length]:
+            while (
+                i + length < len(a)
+                and j + length < len(b)
+                and a[i + length] == b[j + length]
+            ):
                 length += 1
             if best is None or length > best[1]:
                 best = (i, length)
         if best:
             i, length = best
-            matches.append(dict(original_token_start=i, alleged_token_start=j, length_tokens=length,
-                snippet=" ".join(a[i:i+min(length, 200)]), snippet_truncated=length > 200))
+            matches.append(
+                dict(
+                    original_token_start=i,
+                    alleged_token_start=j,
+                    length_tokens=length,
+                    snippet=" ".join(a[i : i + min(length, 200)]),
+                    snippet_truncated=length > 200,
+                )
+            )
             j += length
         else:
             j += 1
@@ -108,16 +120,39 @@ def compute_text_similarity(raw_original, raw_alleged):
     na, nb = normalize_text(raw_original), normalize_text(raw_alleged)
     a, b = tokenize(na), tokenize(nb)
     if not a or not b:
-        raise ValueError("No readable words in one or both files. Scanned PDFs need a text layer; OCR is not performed.")
+        raise ValueError(
+            "No readable words in one or both files. Scanned PDFs need a text layer; OCR is not performed."
+        )
     if max(len(a), len(b)) > get_settings().max_text_tokens:
-        raise ValueError(f"Text exceeds {get_settings().max_text_tokens:,} tokens per file. Compare a smaller identified work or excerpt.")
-    m1, m2, m3 = five_gram_jaccard(a, b), lcs_ratio(a, b), tfidf_cosine_similarity(na, nb)
+        raise ValueError(
+            f"Text exceeds {get_settings().max_text_tokens:,} tokens per file. Compare a smaller identified work or excerpt."
+        )
+    m1, m2, m3 = (
+        five_gram_jaccard(a, b),
+        lcs_ratio(a, b),
+        tfidf_cosine_similarity(na, nb),
+    )
     m4 = named_entity_overlap(raw_original, raw_alleged)
-    score = (.35*m1 + .25*m2 + .30*m3 + .10*(m4 or 0)) / (1 if m4 is not None else .90)
+    score = (0.35 * m1 + 0.25 * m2 + 0.30 * m3 + 0.10 * (m4 or 0)) / (
+        1 if m4 is not None else 0.90
+    )
     matches = matched_passages(a, b)
-    return TextSimilarityResult(round(min(1, max(0, score)), 6),
-        {"M1_ngram_jaccard": round(m1, 6), "M2_lcs_ratio": round(m2, 6), "M3_tfidf_cosine": round(m3, 6), "M4_entity_overlap": round(m4, 6) if m4 is not None else None},
-        matches, len(a), len(b), dict(original=_coverage(matches, "original_token_start", len(a)),
+    return TextSimilarityResult(
+        round(min(1, max(0, score)), 6),
+        {
+            "M1_ngram_jaccard": round(m1, 6),
+            "M2_lcs_ratio": round(m2, 6),
+            "M3_tfidf_cosine": round(m3, 6),
+            "M4_entity_overlap": round(m4, 6) if m4 is not None else None,
+        },
+        matches,
+        len(a),
+        len(b),
+        dict(
+            original=_coverage(matches, "original_token_start", len(a)),
             alleged=_coverage(matches, "alleged_token_start", len(b)),
             note="Lower-bound coverage of displayed exact normalized-token matches; up to 50 blocks and 8 candidate starts per phrase. Not legal substantiality.",
-            ngram_size=min(5, len(a), len(b)), entity_metric_available=m4 is not None))
+            ngram_size=min(5, len(a), len(b)),
+            entity_metric_available=m4 is not None,
+        ),
+    )

@@ -24,7 +24,9 @@ def _hamming_similarity(hash_a: str, hash_b: str) -> float:
     return 1.0 - (distance / max_bits)
 
 
-def _monotonic_align(frames_a: list[FrameSample], frames_b: list[FrameSample]) -> list[tuple[FrameSample, FrameSample, float]]:
+def _monotonic_align(
+    frames_a: list[FrameSample], frames_b: list[FrameSample]
+) -> list[tuple[FrameSample, FrameSample, float]]:
     if not frames_a or not frames_b:
         return []
 
@@ -54,7 +56,9 @@ def _monotonic_align(frames_a: list[FrameSample], frames_b: list[FrameSample]) -
     return aligned
 
 
-def _compute_ssim_and_psnr(aligned: list[tuple[FrameSample, FrameSample, float]]) -> tuple[float, float]:
+def _compute_ssim_and_psnr(
+    aligned: list[tuple[FrameSample, FrameSample, float]],
+) -> tuple[float, float]:
     try:
         import cv2
         from skimage.metrics import structural_similarity as ssim
@@ -91,7 +95,9 @@ def _compute_ssim_and_psnr(aligned: list[tuple[FrameSample, FrameSample, float]]
     return avg_ssim, normalized_psnr
 
 
-def _timeline_payload(aligned: list[tuple[FrameSample, FrameSample, float]]) -> list[dict[str, Any]]:
+def _timeline_payload(
+    aligned: list[tuple[FrameSample, FrameSample, float]],
+) -> list[dict[str, Any]]:
     payload: list[dict[str, Any]] = []
     for frame_a, frame_b, sim in aligned[:200]:
         payload.append(
@@ -125,7 +131,11 @@ def compute_video_similarity(
     v2, v3 = _compute_ssim_and_psnr(aligned)
 
     both_have_transcript = bool(original_transcript and alleged_transcript)
-    transcript_result = compute_text_similarity(original_transcript, alleged_transcript) if both_have_transcript else None
+    transcript_result = (
+        compute_text_similarity(original_transcript, alleged_transcript)
+        if both_have_transcript
+        else None
+    )
     v4 = transcript_result.headline_score if both_have_transcript else 0.0
 
     if both_have_transcript:
@@ -145,5 +155,7 @@ def compute_video_similarity(
             "V4_transcript_similarity": round(v4, 6) if both_have_transcript else None,
         },
         timeline_matches=_timeline_payload(aligned),
-        transcript_excerpt_matches=transcript_result.matched_passages[:50] if transcript_result else [],
+        transcript_excerpt_matches=transcript_result.matched_passages[:50]
+        if transcript_result
+        else [],
     )
