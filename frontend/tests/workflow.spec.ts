@@ -135,9 +135,33 @@ test("recoverable server error", async ({ page }) => {
   await expect(page.locator('.error[role="alert"]')).toContainText(
     "Could not reach",
   );
+  await expect(page.getByRole("status")).toContainText(
+    "service is unavailable",
+  );
+  await expect(
+    page.getByText("Connecting to the analysis service…"),
+  ).toHaveCount(0);
   await page.unroute("**/api/v1/cases/questionnaire");
   await page.getByRole("button", { name: "Retry connection" }).click();
   await expect(
     page.getByRole("heading", { name: "What are you comparing?" }),
   ).toBeVisible();
+});
+
+test("a stalled connection times out with an actionable retry", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/cases/questionnaire", () => {});
+  await page.goto("/");
+  await expect(page.getByRole("status")).toContainText("Connecting");
+  await expect(page.locator('.error[role="alert"]')).toContainText(
+    "Could not reach the analysis service",
+    { timeout: 20_000 },
+  );
+  await expect(page.getByRole("status")).toContainText(
+    "service is unavailable",
+  );
+  await expect(
+    page.getByRole("button", { name: "Retry connection" }),
+  ).toBeEnabled();
 });
