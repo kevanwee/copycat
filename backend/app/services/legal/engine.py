@@ -1,7 +1,8 @@
-from __future__ import annotations
+"""Three-valued evidence triage. Scores never establish legal requirements."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
+from app.services.legal.intake import Assessment, LegalIntake
 
 
 @dataclass(slots=True)
@@ -9,176 +10,117 @@ class LegalNodeResult:
     node_id: str
     phase: str
     answer: str
-    confidence: float
-    evidence_refs: list[str]
-    legal_refs: list[str]
     prompt: str
+    explanation: str
+    evidence_needed: str
+    basis: str = ""
+    evidence_refs: list[str] = field(default_factory=list)
+    legal_refs: list[str] = field(default_factory=list)
 
 
-def _as_bool(value: Any) -> bool | None:
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        return bool(value)
-    if isinstance(value, str):
-        lowered = value.strip().lower()
-        if lowered in {"yes", "true", "1"}:
-            return True
-        if lowered in {"no", "false", "0"}:
-            return False
-    return None
+def all_answers(answers: list[str]) -> str:
+    if "no" in answers:
+        return "no"
+    return "yes" if answers and all(a == "yes" for a in answers) else "unknown"
 
 
-def _score_gte(facts: dict[str, Any], fact: str, threshold: float) -> bool | None:
-    raw = facts.get(fact)
-    if raw is None:
-        return None
-    try:
-        return float(raw) >= float(threshold)
-    except Exception:
-        return None
-
-
-def _evaluate_expression(expr: dict[str, Any], facts: dict[str, Any], node_answers: dict[str, str]) -> bool | None:
-    if not isinstance(expr, dict):
-        return None
-
-    expr_type = expr.get("type")
-
-    if expr_type == "fact_bool":
-        return _as_bool(facts.get(expr.get("fact")))
-    if expr_type == "fact_false":
-        val = _as_bool(facts.get(expr.get("fact")))
-        return None if val is None else (not val)
-    if expr_type == "all_true":
-        facts_list = expr.get("facts") or []
-        if not isinstance(facts_list, list):
-            return None
-        vals = [_as_bool(facts.get(f)) for f in facts_list]
-        if any(v is None for v in vals):
-            return None
-        return all(vals)
-    if expr_type == "any_true":
-        facts_list = expr.get("facts") or []
-        if not isinstance(facts_list, list):
-            return None
-        vals = [_as_bool(facts.get(f)) for f in facts_list]
-        if all(v is None for v in vals):
-            return None
-        return any(v for v in vals if v is not None)
-    if expr_type == "score_gte":
-        return _score_gte(facts, expr.get("fact", ""), float(expr.get("threshold", 0.0)))
-    if expr_type == "all_nodes_true":
-        nodes = expr.get("nodes") or []
-        if not isinstance(nodes, list):
-            return None
-        vals = [node_answers.get(n) for n in nodes]
-        if any(v is None for v in vals):
-            return None
-        if any(v == "unknown" for v in vals):
-            return None
-        return all(v == "yes" for v in vals)
-
-    return None
-
-
-def evaluate_rulepack(rulepack: dict[str, Any], facts: dict[str, Any]) -> tuple[list[LegalNodeResult], dict[str, str]]:
-    node_results: list[LegalNodeResult] = []
-    node_answers: dict[str, str] = {}
-
-    nodes = rulepack.get("nodes") or []
-    if not isinstance(nodes, list):
-        nodes = []
-
-    for node in nodes:
-        if not isinstance(node, dict):
-            continue
-
-        derive = node.get("derive") or {}
-        if not isinstance(derive, dict):
-            derive = {}
-        for key, expr in derive.items():
-            if key not in facts:
-                facts[key] = _evaluate_expression(expr, facts, node_answers)
-
-        required_facts = node.get("required_facts") or []
-        if not isinstance(required_facts, list):
-            required_facts = []
-
-        required_nodes = node.get("required_nodes") or []
-        if not isinstance(required_nodes, list):
-            required_nodes = []
-
-        known_required_facts = [facts.get(key) is not None for key in required_facts]
-        known_required_nodes = [node_answers.get(key) is not None for key in required_nodes]
-
-        denominator = max(1, len(required_facts) + len(required_nodes))
-        evidence_ratio = (sum(known_required_facts) + sum(known_required_nodes)) / denominator
-
-        bool_result = _evaluate_expression(node.get("eval", {}), facts, node_answers)
-        if bool_result is True:
-            answer = "yes"
-            answer_certainty = 1.0
-        elif bool_result is False:
-            answer = "no"
-            answer_certainty = 1.0
-        else:
-            answer = "unknown"
-            answer_certainty = 0.0
-
-        # Blend evidence coverage (60%) and answer determinism (40%).
-        # Prevents a node with all facts present but an unknown answer from
-        # falsely reporting 100% confidence.
-        confidence = round((evidence_ratio * 0.6) + (answer_certainty * 0.4), 6)
-
-        evidence_refs = [f"fact:{f}" for f in required_facts if facts.get(f) is not None]
-        evidence_refs.extend([f"node:{n}" for n in required_nodes if node_answers.get(n) is not None])
-
-        result = LegalNodeResult(
-            node_id=node["id"],
-            phase=node["phase"],
-            answer=answer,
-            confidence=confidence,
-            evidence_refs=evidence_refs,
-            legal_refs=node.get("legal_refs", []),
-            prompt=node.get("prompt", ""),
+def evaluate_rulepack(
+    rulepack: dict[str, Any], facts: dict[str, Any]
+) -> tuple[list[LegalNodeResult], dict[str, str]]:
+    intake = LegalIntake.model_validate(facts)
+    nodes, answers = [], {}
+    for q in rulepack["questions"]:
+        assessment = intake.assessments.get(q["id"], Assessment())
+        answer, explanation = assessment.answer, q["explanation"]
+        if q["id"] == "fair_use" and answer == "yes":
+            f = intake.fair_use_factors
+            complete = all(
+                getattr(f, k).strip() for k in ("purpose", "nature", "amount", "market")
+            )
+            ack_ok = f.context == "other" or (
+                bool(f.acknowledgment_basis.strip())
+                and (
+                    f.acknowledgment == "sufficient"
+                    or (f.context == "news" and f.acknowledgment == "impossible")
+                )
+            )
+            if not complete or not ack_ok:
+                answer = "unknown"
+                explanation += " Complete all four factors and any required acknowledgment basis before relying on the supplied conclusion."
+        answers[q["id"]] = answer
+        nodes.append(
+            LegalNodeResult(
+                node_id=q["id"],
+                phase=q["phase"],
+                answer=answer,
+                prompt=q["prompt"],
+                explanation=explanation,
+                evidence_needed=q["evidence_needed"],
+                basis=assessment.basis,
+                evidence_refs=[f"intake.assessments.{q['id']}"]
+                if assessment.basis
+                else [],
+                legal_refs=q["legal_refs"],
+            )
         )
-        node_results.append(result)
-        node_answers[node["id"]] = answer
-
-    return node_results, node_answers
+    return nodes, answers
 
 
-def compute_risk_band(node_answers: dict[str, str], similarity_score: float) -> str:
-    if node_answers.get("subsistence_overall") == "no":
-        return "LOW"
-
-    base = "LOW"
-    if similarity_score >= 0.75:
-        base = "HIGH"
-    elif similarity_score >= 0.40:
-        base = "MEDIUM"
-
-    infringement_core = all(
-        node_answers.get(key) == "yes"
-        for key in [
-            "infringement_ownership_standing",
-            "infringement_acts_covered",
-            "infringement_no_authorization",
-            "copying_objective_similarity",
-            "substantial_taking_quality",
-        ]
+def assess_outcome(rulepack: dict, intake: dict, answers: dict[str, str]) -> dict:
+    facts = LegalIntake.model_validate(intake)
+    scope = []
+    if facts.work_category not in rulepack["supported_categories"]:
+        scope.append(
+            "Identify the protected work category; other categories need a separate rights analysis."
+        )
+    if facts.claim_route != "direct":
+        scope.append(
+            "Authorisation and secondary infringement require separate review of conduct, control and statutory conditions."
+        )
+    if facts.conduct_date is None:
+        scope.append("Supply the alleged conduct date to check which law applies.")
+    elif (
+        facts.conduct_date.isoformat()
+        < rulepack.get("consolidation_effective_from", "2025-03-09")
+        or facts.conduct_date.isoformat() > rulepack["reviewed_on"]
+    ):
+        scope.append(
+            "The conduct date falls outside the reviewed legal period; check the law at that date."
+        )
+    if facts.work_category == "film":
+        scope.append(
+            "Film copyright only: assess soundtrack, script, music, artistic works and performance rights separately."
+        )
+    core = rulepack["core_requirements"]
+    missing = [k for k in core if answers[k] == "unknown"]
+    contrary = [k for k in core if answers[k] == "no"]
+    exceptions = [k for k in ("fair_use", "other_exception") if answers[k] != "no"]
+    if any(not s.startswith("Film copyright only") for s in scope):
+        status, title = "scope_review", "Scope needs review"
+    elif contrary:
+        status, title = "not_established", "Required limbs not established"
+    elif answers["independent_creation"] == "yes" or any(
+        answers[k] == "yes" for k in exceptions
+    ):
+        status, title = (
+            "review_required",
+            "Competing evidence or exception needs review",
+        )
+    elif missing or exceptions or answers["independent_creation"] == "unknown":
+        status, title = "incomplete", "More evidence needed"
+    else:
+        status, title = (
+            "supported",
+            "Prima facie limbs supported by supplied assessments",
+        )
+    return dict(
+        status=status,
+        title=title,
+        summary="This evaluates your recorded assessments, not an independent finding of infringement. Technical similarity does not decide copying, substantiality or fair use.",
+        missing_requirements=missing,
+        contrary_requirements=contrary,
+        exception_review=exceptions,
+        scope_notes=scope,
+        answered_questions=sum(v != "unknown" for v in answers.values()),
+        total_questions=len(answers),
     )
-
-    if infringement_core:
-        base = "HIGH"
-
-    if node_answers.get("exceptions_fair_use_signal") == "yes":
-        if base == "HIGH":
-            return "MEDIUM"
-        if base == "MEDIUM":
-            return "LOW"
-
-    return base

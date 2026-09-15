@@ -1,49 +1,34 @@
-# Product Requirements Document (PRD) - Copycat v1
+# Copycat v2 product requirements
 
-## Problem Statement
-IP teams need a deterministic, reproducible way to triage copyright infringement risk under Singapore law before escalating to legal counsel.
+## Outcome
 
-## Personas
-- In-house legal analyst
-- Rights management operations staff
-- Litigation support analyst
+Give legal analysts and rights teams a reproducible comparison and a clear
+record of the evidence needed for Singapore copyright triage. The product must
+never substitute a similarity percentage for a legal finding.
 
-## Goals
-1. Determine if copyright can subsist under Singapore triage logic.
-2. Produce infringement/substantial-taking risk indicators.
-3. Compare original and alleged works with deterministic overlap scoring.
-4. Export evidence-backed report in web and PDF formats.
+## Delivered workflow
 
-## Non-Goals
-- Final legal advice.
-- Cross-medium comparison in v1.
-- Non-Singapore legal analysis in v1.
+1. Paired text, still-image or visual-video inputs with size/format validation.
+2. Explicit category, claim route, conduct date and unknown-by-default legal facts.
+3. Evidence explanations for known answers, with a four-factor fair-use worksheet.
+4. A case workspace showing missing/contrary limbs, possible exceptions and
+   separate technical evidence. Source-linked legal explanations are inspectable.
+5. Revision/rerun, PDF/JSON export, session recovery, access-key export and deletion.
 
-## Scope
-- Text vs text: txt, pdf, docx
-- Video vs video: mp4, mov, mkv, avi
+## Acceptance requirements
 
-## Functional Requirements
-- Case creation with jurisdiction (`SG`).
-- Two-artifact upload (`original`, `alleged`) same media type.
-- Async analysis job lifecycle.
-- Deterministic similarity score + component metrics.
-- Singapore legal node-by-node triage output.
-- JSON report + PDF export.
+Same substantive inputs, dependencies, versions and outcomes produce the same
+fingerprint. Empty extraction fails. Missing media dependencies are explicit.
+Private resources require a capability. Mutation invalidates stale results.
+Expiry covers all case material. Keyboard/mobile workflows and meaningful
+API/scoring/legality regressions are checked in CI.
 
-## Determinism Requirements
-- Fixed preprocessing/tokenization and model/library versions.
-- No stochastic decode for transcript extraction.
-- Stable score formulas and tie-break rules.
-- Report includes `scoring_version` and `rule_pack_version`.
+## Boundaries
 
-## Retention and Security
-- Default retention: 24h for source files/reports.
-- Internal use only in v1.
-- No external auth in v1.
-
-## Success Metrics
-- 100% deterministic reruns for identical inputs.
-- >=95% successful job completion for valid files in supported limits.
-- Text jobs typically <2 min.
-- 10-minute videos typically <8 min at normal queue load.
+Supported legal route: direct infringement of identified authorial work or film
+copyright within the reviewed consolidation period. Other routes/categories,
+historical facts, underlying film rights and uncertain international protection
+need separate analysis. No automatic verdict, fair-use balancing, account-based
+tenancy, S3 backend, audio recognition, OCR, semantic paraphrase detection or
+cross-medium comparison. Human legal assessments are recorded, not independently
+verified. See the [improvement audit](IMPROVEMENT-AUDIT.md) for release evidence.

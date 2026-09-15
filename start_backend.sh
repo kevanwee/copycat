@@ -32,4 +32,4 @@ info "API docs: http://${HOST}:${PORT}/docs"
 # trap "kill $CELERY_PID 2>/dev/null" EXIT
 
 cd backend
-uvicorn app.main:app --host "$HOST" --port "$PORT" --reload
+uvicorn app.main:app --host "$HOST" --port "$PORT"

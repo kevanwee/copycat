@@ -1,100 +1,675 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Copycat API
-  version: 1.0.0
-servers:
-  - url: http://localhost:8000
+  version: 2.0.0
 paths:
+  /health:
+    get:
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Health Health Get
+  /api/v1/cases/questionnaire:
+    get:
+      tags:
+      - cases
+      summary: Questionnaire
+      operationId: questionnaire_api_v1_cases_questionnaire_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/v1/cases:
     post:
-      summary: Create case
+      tags:
+      - cases
+      summary: Create Case
+      operationId: create_case_api_v1_cases_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/cases/{case_id}:
+    get:
+      tags:
+      - cases
+      summary: Get Case
+      operationId: get_case_api_v1_cases__case_id__get
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - cases
+      summary: Delete Case
+      operationId: delete_case_api_v1_cases__case_id__delete
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/cases/{case_id}/intake:
+    put:
+      tags:
+      - cases
+      summary: Update Intake
+      operationId: update_intake_api_v1_cases__case_id__intake_put
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                jurisdiction:
-                  type: string
-                metadata:
-                  type: object
+              $ref: '#/components/schemas/LegalIntake'
       responses:
         '200':
-          description: Case created
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/cases/{case_id}/artifacts:
     post:
-      summary: Upload artifact
+      tags:
+      - cases
+      summary: Upload Artifact
+      operationId: upload_artifact_api_v1_cases__case_id__artifacts_post
       parameters:
-        - in: path
-          name: case_id
-          required: true
-          schema:
-            type: string
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
-              type: object
-              properties:
-                role:
-                  type: string
-                  enum: [original, alleged]
-                media_type:
-                  type: string
-                  enum: [text, video]
-                file:
-                  type: string
-                  format: binary
+              $ref: '#/components/schemas/Body_upload_artifact_api_v1_cases__case_id__artifacts_post'
       responses:
         '200':
-          description: Artifact uploaded
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/cases/{case_id}/analyze:
     post:
-      summary: Start analysis
+      tags:
+      - cases
+      summary: Analyze Case
+      operationId: analyze_case_api_v1_cases__case_id__analyze_post
       parameters:
-        - in: path
-          name: case_id
-          required: true
-          schema:
-            type: string
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
       responses:
         '200':
-          description: Analysis job queued
-  /api/v1/jobs/{job_id}:
-    get:
-      summary: Get job status
-      parameters:
-        - in: path
-          name: job_id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Job details
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/cases/{case_id}/report:
     get:
-      summary: Get JSON report
+      tags:
+      - cases
+      summary: Get Case Report
+      operationId: get_case_report_api_v1_cases__case_id__report_get
       parameters:
-        - in: path
-          name: case_id
-          required: true
-          schema:
-            type: string
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
       responses:
         '200':
-          description: Report available
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseReportResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/cases/{case_id}/report.pdf:
     get:
-      summary: Get PDF report
+      tags:
+      - cases
+      summary: Get Pdf
+      operationId: get_pdf_api_v1_cases__case_id__report_pdf_get
       parameters:
-        - in: path
-          name: case_id
-          required: true
-          schema:
-            type: string
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
       responses:
         '200':
-          description: PDF stream
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/cases/{case_id}/preview/{role}:
+    get:
+      tags:
+      - cases
+      summary: Image Preview
+      operationId: image_preview_api_v1_cases__case_id__preview__role__get
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Case Id
+      - name: role
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Role
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/jobs/{job_id}:
+    get:
+      tags:
+      - jobs
+      summary: Get Job
+      operationId: get_job_api_v1_jobs__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: x-case-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Case-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AnalyzeResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        case_id:
+          type: string
+          title: Case Id
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - job_id
+      - case_id
+      - status
+      title: AnalyzeResponse
+    ArtifactResponse:
+      properties:
+        artifact_id:
+          type: string
+          title: Artifact Id
+        case_id:
+          type: string
+          title: Case Id
+        role:
+          type: string
+          enum:
+          - original
+          - alleged
+          title: Role
+        media_type:
+          type: string
+          enum:
+          - text
+          - video
+          - image
+          title: Media Type
+        filename:
+          type: string
+          title: Filename
+        size_bytes:
+          type: integer
+          title: Size Bytes
+      type: object
+      required:
+      - artifact_id
+      - case_id
+      - role
+      - media_type
+      - filename
+      - size_bytes
+      title: ArtifactResponse
+    Assessment:
+      properties:
+        answer:
+          type: string
+          enum:
+          - 'yes'
+          - 'no'
+          - unknown
+          title: Answer
+          default: unknown
+        basis:
+          type: string
+          maxLength: 4000
+          title: Basis
+          default: ''
+      additionalProperties: false
+      type: object
+      title: Assessment
+    Body_upload_artifact_api_v1_cases__case_id__artifacts_post:
+      properties:
+        role:
+          type: string
+          title: Role
+        media_type:
+          type: string
+          title: Media Type
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+          title: File
+      type: object
+      required:
+      - role
+      - media_type
+      - file
+      title: Body_upload_artifact_api_v1_cases__case_id__artifacts_post
+    CaseCreateRequest:
+      properties:
+        jurisdiction:
+          type: string
+          title: Jurisdiction
+          default: SG
+        metadata:
+          type: object
+          title: Metadata
+        intake:
+          $ref: '#/components/schemas/LegalIntake'
+      type: object
+      title: CaseCreateRequest
+    CaseReportResponse:
+      properties:
+        case_id:
+          type: string
+          title: Case Id
+        report:
+          type: object
+          title: Report
+      type: object
+      required:
+      - case_id
+      - report
+      title: CaseReportResponse
+    CaseResponse:
+      properties:
+        case_id:
+          type: string
+          title: Case Id
+        jurisdiction:
+          type: string
+          title: Jurisdiction
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        access_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Access Token
+      type: object
+      required:
+      - case_id
+      - jurisdiction
+      - status
+      - created_at
+      title: CaseResponse
+    FairUseFactors:
+      properties:
+        purpose:
+          type: string
+          maxLength: 4000
+          title: Purpose
+          default: ''
+        nature:
+          type: string
+          maxLength: 4000
+          title: Nature
+          default: ''
+        amount:
+          type: string
+          maxLength: 4000
+          title: Amount
+          default: ''
+        market:
+          type: string
+          maxLength: 4000
+          title: Market
+          default: ''
+        context:
+          type: string
+          enum:
+          - other
+          - news
+          - criticism_review
+          title: Context
+          default: other
+        acknowledgment:
+          type: string
+          enum:
+          - unknown
+          - sufficient
+          - impossible
+          - absent
+          title: Acknowledgment
+          default: unknown
+        acknowledgment_basis:
+          type: string
+          maxLength: 4000
+          title: Acknowledgment Basis
+          default: ''
+      additionalProperties: false
+      type: object
+      title: FairUseFactors
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JobResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        case_id:
+          type: string
+          title: Case Id
+        status:
+          type: string
+          title: Status
+        progress:
+          type: number
+          title: Progress
+        stage:
+          type: string
+          title: Stage
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - job_id
+      - case_id
+      - status
+      - progress
+      - stage
+      - updated_at
+      title: JobResponse
+    LegalIntake:
+      properties:
+        title:
+          type: string
+          maxLength: 160
+          title: Title
+          default: Untitled comparison
+        work_category:
+          type: string
+          enum:
+          - unknown
+          - literary
+          - dramatic
+          - musical
+          - artistic
+          - film
+          - other
+          title: Work Category
+          default: unknown
+        claim_route:
+          type: string
+          enum:
+          - direct
+          - authorisation
+          - secondary
+          - unknown
+          title: Claim Route
+          default: direct
+        conduct_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Conduct Date
+        assessments:
+          additionalProperties:
+            $ref: '#/components/schemas/Assessment'
+          type: object
+          maxProperties: 30
+          title: Assessments
+        fair_use_factors:
+          $ref: '#/components/schemas/FairUseFactors'
+      additionalProperties: false
+      type: object
+      title: LegalIntake
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

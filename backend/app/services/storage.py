@@ -14,7 +14,9 @@ class LocalStorage:
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-    def write_artifact(self, case_id: str, artifact_id: str, filename: str, data: bytes) -> Path:
+    def write_artifact(
+        self, case_id: str, artifact_id: str, filename: str, data: bytes
+    ) -> Path:
         safe_name = filename.replace("..", "_").replace("/", "_").replace("\\", "_")
         path = self.case_dir(case_id) / f"{artifact_id}_{safe_name}"
         path.write_bytes(data)

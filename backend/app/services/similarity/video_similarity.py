@@ -24,7 +24,9 @@ def _hamming_similarity(hash_a: str, hash_b: str) -> float:
     return 1.0 - (distance / max_bits)
 
 
-def _monotonic_align(frames_a: list[FrameSample], frames_b: list[FrameSample]) -> list[tuple[FrameSample, FrameSample, float]]:
+def _monotonic_align(
+    frames_a: list[FrameSample], frames_b: list[FrameSample]
+) -> list[tuple[FrameSample, FrameSample, float]]:
     if not frames_a or not frames_b:
         return []
 
@@ -54,12 +56,14 @@ def _monotonic_align(frames_a: list[FrameSample], frames_b: list[FrameSample]) -
     return aligned
 
 
-def _compute_ssim_and_psnr(aligned: list[tuple[FrameSample, FrameSample, float]]) -> tuple[float, float]:
+def _compute_ssim_and_psnr(
+    aligned: list[tuple[FrameSample, FrameSample, float]],
+) -> tuple[float, float]:
     try:
         import cv2
         from skimage.metrics import structural_similarity as ssim
-    except Exception:
-        return 0.0, 0.0
+    except ImportError as exc:
+        raise RuntimeError("Video structure metrics are unavailable") from exc
 
     if not aligned:
         return 0.0, 0.0
@@ -79,7 +83,7 @@ def _compute_ssim_and_psnr(aligned: list[tuple[FrameSample, FrameSample, float]]
         if gray_a.shape != gray_b.shape:
             gray_b = cv2.resize(gray_b, (gray_a.shape[1], gray_a.shape[0]))
 
-        ssim_values.append(float(ssim(gray_a, gray_b)))
+        ssim_values.append(max(0.0, min(1.0, float(ssim(gray_a, gray_b)))))
         psnr_values.append(float(cv2.PSNR(img_a, img_b)))
 
     if not ssim_values:
@@ -91,7 +95,9 @@ def _compute_ssim_and_psnr(aligned: list[tuple[FrameSample, FrameSample, float]]
     return avg_ssim, normalized_psnr
 
 
-def _timeline_payload(aligned: list[tuple[FrameSample, FrameSample, float]]) -> list[dict[str, Any]]:
+def _timeline_payload(
+    aligned: list[tuple[FrameSample, FrameSample, float]],
+) -> list[dict[str, Any]]:
     payload: list[dict[str, Any]] = []
     for frame_a, frame_b, sim in aligned[:200]:
         payload.append(
@@ -99,8 +105,6 @@ def _timeline_payload(aligned: list[tuple[FrameSample, FrameSample, float]]) -> 
                 "original_timestamp_sec": round(frame_a.timestamp_sec, 3),
                 "alleged_timestamp_sec": round(frame_b.timestamp_sec, 3),
                 "hash_similarity": round(sim, 6),
-                "original_frame_path": frame_a.path,
-                "alleged_frame_path": frame_b.path,
             },
         )
     return payload
@@ -112,6 +116,8 @@ def compute_video_similarity(
     original_transcript: str,
     alleged_transcript: str,
 ) -> VideoSimilarityResult:
+    if not original_frames or not alleged_frames:
+        raise ValueError("Both videos must contain decodable frames")
     aligned = _monotonic_align(original_frames, alleged_frames)
 
     if aligned:
@@ -124,8 +130,12 @@ def compute_video_similarity(
 
     v2, v3 = _compute_ssim_and_psnr(aligned)
 
-    transcript_result = compute_text_similarity(original_transcript or "", alleged_transcript or "")
     both_have_transcript = bool(original_transcript and alleged_transcript)
+    transcript_result = (
+        compute_text_similarity(original_transcript, alleged_transcript)
+        if both_have_transcript
+        else None
+    )
     v4 = transcript_result.headline_score if both_have_transcript else 0.0
 
     if both_have_transcript:
@@ -142,8 +152,10 @@ def compute_video_similarity(
             "V1_frame_phash_alignment": round(v1, 6),
             "V2_ssim": round(v2, 6),
             "V3_psnr_supporting": round(v3, 6),
-            "V4_transcript_similarity": round(v4, 6),
+            "V4_transcript_similarity": round(v4, 6) if both_have_transcript else None,
         },
         timeline_matches=_timeline_payload(aligned),
-        transcript_excerpt_matches=transcript_result.matched_passages[:50],
+        transcript_excerpt_matches=transcript_result.matched_passages[:50]
+        if transcript_result
+        else [],
     )

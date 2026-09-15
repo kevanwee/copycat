@@ -32,16 +32,9 @@ source .venv/bin/activate
 
 info "Installing core Python requirements …"
 pip install --quiet --upgrade pip
-pip install --quiet -r requirements.txt
+pip install --quiet -r requirements.txt -r requirements-image.txt
 
-info "Checking optional video/ML packages …"
-read -r -p "Install video/ML extras (opencv, whisper, etc.)? [y/N] " REPLY
-if [[ "${REPLY,,}" == "y" ]]; then
-  pip install --quiet -r requirements-video.txt
-  success "Video extras installed."
-else
-  info "Skipping video extras. Re-run with: pip install -r backend/requirements-video.txt"
-fi
+info "Video requires FFmpeg and ffprobe on PATH. Audio and OCR are not assessed."
 
 deactivate
 cd ..
@@ -49,7 +42,7 @@ cd ..
 # ── Frontend dependencies ─────────────────────────────────────
 info "Installing frontend npm packages …"
 cd frontend
-npm install --silent
+npm ci --silent
 cd ..
 
 # ── Create data directories ───────────────────────────────────

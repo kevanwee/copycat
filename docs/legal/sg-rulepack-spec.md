@@ -1,40 +1,33 @@
-# SG Rule Pack Spec (`sg_v1`)
+# SG rulepack v2
 
-## Format
-JSON rule pack with:
-- `rule_pack_id`, `version`, `jurisdiction`
-- `citations` map
-- ordered `nodes`
+`backend/app/rulepacks/sg_v2.json` is the single question/citation catalog used by
+the API, UI and legal engine. Each question has a stable ID, phase, plain-language
+prompt, explanation, evidence request and citation IDs. The pack specifies ten
+core requirements, supported work categories and the reviewed consolidation
+period. Source-review limitations are part of the report.
 
-## Node Schema
-- `id`: unique node identifier
-- `phase`: subsistence | infringement | substantial_taking | exceptions
-- `prompt`: user-facing legal question
-- `required_facts`: fact keys used for confidence
-- `required_nodes`: optional dependencies
-- `eval`: deterministic expression
-- `derive`: optional computed facts
-- `legal_refs`: citation IDs
+`LegalIntake` validates the supplied context; assessment values are exactly
+`yes`, `no` or `unknown`. Known answers require a non-empty basis of at most
+4,000 characters. Extra fields and unknown question IDs are rejected. The
+work category and claim route are controlled enumerations. Date is a date,
+not a freeform string.
 
-## Supported Eval Types
-- `fact_bool`
-- `fact_false`
-- `all_true`
-- `any_true`
-- `score_gte`
-- `all_nodes_true`
+## Outcome precedence
 
-## Node Output
-- `answer`: yes | no | unknown
-- `confidence`: known evidence ratio
-- `evidence_refs`: fact/node references
-- `legal_refs`
+1. Unsupported category/route or date outside the reviewed period: `scope_review`.
+2. Any core requirement answered no: `not_established`.
+3. Independent creation or an exception answered yes: `review_required`.
+4. Any core requirement unknown, exception not excluded, or independent-creation
+   question unknown: `incomplete`.
+5. Otherwise: `supported` on the supplied assessments only.
 
-## Risk Band
-Derived using:
-- subsistence gate
-- similarity headline score
-- infringement core nodes
-- fair-use signal downgrade
+All missing and contrary core answers and open exceptions remain in the payload
+even when another status has precedence. Film assessments carry a separate
+underlying-rights scope note. A fair-use yes becomes unknown if any factor note
+is missing or the applicable acknowledgment requirement is unresolved. Neither
+the engine nor the rulepack reads a similarity score. There is no confidence
+percentage, risk probability or automatic fair-use discount.
 
-Risk values: `low`, `medium`, `high`
+The v1 rulepack was removed because its defaults and threshold rules were
+misleading. Git history retains it for audit. See the
+[source-grounded framework](sg-framework-v2.md).

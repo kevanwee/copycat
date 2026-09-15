@@ -15,18 +15,19 @@ class ImageSimilarityResult:
 # Metric helpers
 # ---------------------------------------------------------------------------
 
+
 def _phash_similarity(path_a: str, path_b: str) -> float:
     """Perceptual hash Hamming similarity (I1). Range [0, 1]."""
     try:
         import imagehash
         from PIL import Image
     except ImportError:
-        return 0.0
+        raise RuntimeError("ImageHash and Pillow are required")
 
     hash_a = imagehash.phash(Image.open(path_a))
     hash_b = imagehash.phash(Image.open(path_b))
-    distance = hash_a - hash_b          # Hamming distance (0 = identical)
-    max_bits = hash_a.hash.size         # typically 64
+    distance = hash_a - hash_b  # Hamming distance (0 = identical)
+    max_bits = hash_a.hash.size  # typically 64
     return max(0.0, 1.0 - distance / max_bits)
 
 
@@ -34,9 +35,8 @@ def _color_histogram_similarity(path_a: str, path_b: str) -> float:
     """Per-channel RGB histogram correlation (I2). Range [0, 1]."""
     try:
         import cv2
-        import numpy as np
-    except ImportError:
-        return 0.0
+    except ImportError as exc:
+        raise RuntimeError("OpenCV is required for image comparison") from exc
 
     img_a = cv2.imread(path_a)
     img_b = cv2.imread(path_b)
@@ -55,13 +55,15 @@ def _color_histogram_similarity(path_a: str, path_b: str) -> float:
     return sum(scores) / len(scores)
 
 
-def _ssim_similarity(path_a: str, path_b: str, target_size: tuple[int, int] = (512, 512)) -> float:
+def _ssim_similarity(
+    path_a: str, path_b: str, target_size: tuple[int, int] = (512, 512)
+) -> float:
     """Structural Similarity Index (I3). Range [0, 1]."""
     try:
         import cv2
         from skimage.metrics import structural_similarity as ssim
-    except ImportError:
-        return 0.0
+    except ImportError as exc:
+        raise RuntimeError("Structure metrics are unavailable") from exc
 
     img_a = cv2.imread(path_a)
     img_b = cv2.imread(path_b)
@@ -82,8 +84,8 @@ def _orb_match_ratio(path_a: str, path_b: str, max_distance: int = 64) -> float:
     """ORB keypoint match ratio (I4). Range [0, 1]."""
     try:
         import cv2
-    except ImportError:
-        return 0.0
+    except ImportError as exc:
+        raise RuntimeError("OpenCV is required for image comparison") from exc
 
     img_a = cv2.imread(path_a, cv2.IMREAD_GRAYSCALE)
     img_b = cv2.imread(path_b, cv2.IMREAD_GRAYSCALE)
@@ -112,6 +114,7 @@ def _orb_match_ratio(path_a: str, path_b: str, max_distance: int = 64) -> float:
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def compute_image_similarity(path_a: str, path_b: str) -> ImageSimilarityResult:
     """
     Compute image similarity using four complementary metrics.
@@ -125,12 +128,22 @@ def compute_image_similarity(path_a: str, path_b: str) -> ImageSimilarityResult:
     Formula:
         score = 0.35·I1 + 0.20·I2 + 0.30·I3 + 0.15·I4
     """
+    import cv2
+
+    cv2.setNumThreads(1)
+    cv2.setRNGSeed(0)
     i1 = _phash_similarity(path_a, path_b)
     i2 = _color_histogram_similarity(path_a, path_b)
     i3 = _ssim_similarity(path_a, path_b)
     i4 = _orb_match_ratio(path_a, path_b)
 
-    score = 0.35 * i1 + 0.20 * i2 + 0.30 * i3 + 0.15 * i4
+    from PIL import Image
+    import numpy as np
+
+    identical = np.array_equal(
+        np.asarray(Image.open(path_a)), np.asarray(Image.open(path_b))
+    )
+    score = 1.0 if identical else 0.35 * i1 + 0.20 * i2 + 0.30 * i3 + 0.15 * i4
     score = max(0.0, min(1.0, float(score)))
 
     return ImageSimilarityResult(
@@ -142,6 +155,7 @@ def compute_image_similarity(path_a: str, path_b: str) -> ImageSimilarityResult:
             "I4_orb_feature_match": round(i4, 6),
         },
         evidence={
-            "paths": {"original": path_a, "alleged": path_b},
+            "identical_normalized_pixels": identical,
+            "method": "pHash 35%, RGB histogram correlation 20%, SSIM 30%, ORB 15%; identical normalized pixels score 1. Flat or textureless images may lack ORB features. Similarity can reflect generic shapes or colours.",
         },
     )

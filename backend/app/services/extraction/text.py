@@ -11,7 +11,7 @@ from pypdf import PdfReader
 
 DetectorFactory.seed = 0
 
-TOKEN_PATTERN = re.compile(r"[A-Za-z0-9']+")
+TOKEN_PATTERN = re.compile(r"[^\W_]+(?:'[^\W_]+)*", re.UNICODE)
 PUNCT_PATTERN = re.compile(r"[^\w\s']", re.UNICODE)
 
 
@@ -45,12 +45,19 @@ def detect_language(text: str) -> str:
 
 
 def extract_text_from_txt(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
+    return path.read_text(encoding="utf-8-sig")
 
 
 def extract_text_from_docx(path: Path) -> str:
     doc = Document(str(path))
-    return "\n".join(p.text for p in doc.paragraphs)
+    from docx.table import Table
+
+    return "\n".join(
+        "\n".join(" | ".join(cell.text for cell in row.cells) for row in block.rows)
+        if isinstance(block, Table)
+        else block.text
+        for block in doc.iter_inner_content()
+    )
 
 
 def _ocr_pdf_images(reader: PdfReader) -> str:
@@ -78,6 +85,8 @@ def _ocr_pdf_images(reader: PdfReader) -> str:
 
 def extract_text_from_pdf(path: Path) -> str:
     reader = PdfReader(str(path))
+    if reader.is_encrypted or len(reader.pages) > 300:
+        raise ValueError("Use an unencrypted text PDF of at most 300 pages.")
     chunks: list[str] = []
     for page in reader.pages:
         text = page.extract_text() or ""
@@ -86,10 +95,12 @@ def extract_text_from_pdf(path: Path) -> str:
     content = "\n".join(chunks)
     if content.strip():
         return content
-    return _ocr_pdf_images(reader)
+    return ""
 
 
-def extract_text(path: str | Path, enforce_english: bool = True) -> TextExtractionResult:
+def extract_text(
+    path: str | Path, enforce_english: bool = True
+) -> TextExtractionResult:
     src = Path(path)
     suffix = src.suffix.lower()
     if suffix == ".txt":
