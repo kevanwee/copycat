@@ -32,3 +32,5 @@ frontend/tsconfig.tsbuildinfo
 backend/data/test_*
 frontend/test-results/
 frontend/playwright-report/
+backend/data/e2e*
+backend/data/*.db

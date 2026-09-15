@@ -21,7 +21,7 @@ def _phash_similarity(path_a: str, path_b: str) -> float:
         import imagehash
         from PIL import Image
     except ImportError:
-        return 0.0
+        raise RuntimeError("ImageHash and Pillow are required")
 
     hash_a = imagehash.phash(Image.open(path_a))
     hash_b = imagehash.phash(Image.open(path_b))
@@ -125,12 +125,20 @@ def compute_image_similarity(path_a: str, path_b: str) -> ImageSimilarityResult:
     Formula:
         score = 0.35·I1 + 0.20·I2 + 0.30·I3 + 0.15·I4
     """
+    import cv2
+    import imagehash
+    import skimage
+    cv2.setNumThreads(1)
+    cv2.setRNGSeed(0)
     i1 = _phash_similarity(path_a, path_b)
     i2 = _color_histogram_similarity(path_a, path_b)
     i3 = _ssim_similarity(path_a, path_b)
     i4 = _orb_match_ratio(path_a, path_b)
 
-    score = 0.35 * i1 + 0.20 * i2 + 0.30 * i3 + 0.15 * i4
+    from PIL import Image
+    import numpy as np
+    identical = np.array_equal(np.asarray(Image.open(path_a)), np.asarray(Image.open(path_b)))
+    score = 1.0 if identical else 0.35 * i1 + 0.20 * i2 + 0.30 * i3 + 0.15 * i4
     score = max(0.0, min(1.0, float(score)))
 
     return ImageSimilarityResult(
@@ -142,6 +150,7 @@ def compute_image_similarity(path_a: str, path_b: str) -> ImageSimilarityResult:
             "I4_orb_feature_match": round(i4, 6),
         },
         evidence={
-            "paths": {"original": path_a, "alleged": path_b},
+            "identical_normalized_pixels": identical,
+            "method": "pHash 35%, RGB histogram correlation 20%, SSIM 30%, ORB 15%; identical normalized pixels score 1. Flat or textureless images may lack ORB features. Similarity can reflect generic shapes or colours.",
         },
     )

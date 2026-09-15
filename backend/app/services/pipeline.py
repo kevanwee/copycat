@@ -75,6 +75,12 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
         raise ValueError(f"Job not found: {job_id}")
 
     artifacts = db.query(Artifact).filter(Artifact.case_id == case_id).order_by(Artifact.created_at.asc()).all()
+    from app.services.access import expires_at
+    from datetime import UTC, datetime
+    if datetime.now(UTC) >= expires_at(case):
+        raise ValueError("Case has expired. Create a new comparison.")
+    case.status = "running"
+    db.commit()
     media_type = _validate_pair(artifacts)
 
     _update_job(db, job, status="running", stage="extract", progress=0.1)
@@ -94,6 +100,8 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
             "component_scores": sim.component_scores,
             "evidence": {
                 "matched_passages": sim.matched_passages,
+                "coverage": sim.coverage,
+                "method": "Unicode NFKC/casefold, adaptive 1–5 token n-grams, exact bit-vector LCS, pairwise TF-IDF and optional regex entity overlap. Matches use zero-based normalized token positions; excerpts are normalized, not quotations.",
                 "languages": {
                     "original": original_extraction.language,
                     "alleged": alleged_extraction.language,
@@ -159,6 +167,7 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
             "component_scores": sim.component_scores,
             "evidence": {
                 "timeline_matches": sim.timeline_matches,
+                "method": "Visual-only: 2 fps at 640x360; monotonic pHash alignment with 8-frame lookahead and 0.55 threshold. Composite: coverage-weighted pHash 75%, aligned SSIM 25%. PSNR is supporting only. Alignment can miss reordered or heavily edited scenes; audio is not assessed.",
                 "transcript_excerpt_matches": sim.transcript_excerpt_matches,
                 "transcript_lengths": {
                     "original_chars": len(original_extraction.transcript),

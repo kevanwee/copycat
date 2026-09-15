@@ -6,6 +6,7 @@ def test_text_case_api_flow(client):
     create_resp = client.post("/api/v1/cases", json={"jurisdiction": "SG", "metadata": {}})
     assert create_resp.status_code == 200
     case_id = create_resp.json()["case_id"]
+    client.headers["X-Case-Token"] = create_resp.json()["access_token"]
 
     files = {"file": ("original.txt", b"hello singapore copyright law text", "text/plain")}
     data = {"role": "original", "media_type": "text"}

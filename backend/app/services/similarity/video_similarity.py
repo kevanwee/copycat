@@ -99,8 +99,6 @@ def _timeline_payload(aligned: list[tuple[FrameSample, FrameSample, float]]) -> 
                 "original_timestamp_sec": round(frame_a.timestamp_sec, 3),
                 "alleged_timestamp_sec": round(frame_b.timestamp_sec, 3),
                 "hash_similarity": round(sim, 6),
-                "original_frame_path": frame_a.path,
-                "alleged_frame_path": frame_b.path,
             },
         )
     return payload
@@ -112,6 +110,8 @@ def compute_video_similarity(
     original_transcript: str,
     alleged_transcript: str,
 ) -> VideoSimilarityResult:
+    if not original_frames or not alleged_frames:
+        raise ValueError("Both videos must contain decodable frames")
     aligned = _monotonic_align(original_frames, alleged_frames)
 
     if aligned:
@@ -124,8 +124,8 @@ def compute_video_similarity(
 
     v2, v3 = _compute_ssim_and_psnr(aligned)
 
-    transcript_result = compute_text_similarity(original_transcript or "", alleged_transcript or "")
     both_have_transcript = bool(original_transcript and alleged_transcript)
+    transcript_result = compute_text_similarity(original_transcript, alleged_transcript) if both_have_transcript else None
     v4 = transcript_result.headline_score if both_have_transcript else 0.0
 
     if both_have_transcript:
@@ -142,8 +142,8 @@ def compute_video_similarity(
             "V1_frame_phash_alignment": round(v1, 6),
             "V2_ssim": round(v2, 6),
             "V3_psnr_supporting": round(v3, 6),
-            "V4_transcript_similarity": round(v4, 6),
+            "V4_transcript_similarity": round(v4, 6) if both_have_transcript else None,
         },
         timeline_matches=_timeline_payload(aligned),
-        transcript_excerpt_matches=transcript_result.matched_passages[:50],
+        transcript_excerpt_matches=transcript_result.matched_passages[:50] if transcript_result else [],
     )

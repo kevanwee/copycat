@@ -21,10 +21,13 @@ class Settings(BaseSettings):
     celery_result_backend: str = "redis://localhost:6379/1"
     celery_task_always_eager: bool = True
 
-    max_text_mb: int = 50
-    max_video_mb: int = 1024
-    max_video_seconds: int = 900
-    max_image_mb: int = 50
+    max_text_mb: int = 10
+    max_video_mb: int = 100
+    max_video_seconds: int = 300
+    max_image_mb: int = 20
+    max_text_tokens: int = 20000
+    cleanup_interval_seconds: int = 300
+    max_active_jobs: int = 2
 
     allowed_jurisdictions: str = "SG"
     default_jurisdiction: str = "SG"

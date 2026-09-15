@@ -29,7 +29,8 @@ def extract_image(path: str | Path, working_dir: str | Path | None = None) -> Im
     fmt = img.format or source.suffix.lstrip(".").upper() or "UNKNOWN"
     orig_w, orig_h = img.size
 
-    rgb = img.convert("RGB")
+    from PIL import ImageOps
+    rgb = ImageOps.exif_transpose(img).convert("RGB")
     rgb.thumbnail(_NORMALIZE_SIZE, Image.LANCZOS)
 
     if working_dir is not None:

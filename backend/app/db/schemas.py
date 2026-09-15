@@ -18,6 +18,7 @@ class CaseResponse(BaseModel):
     jurisdiction: str
     status: str
     created_at: datetime
+    access_token: str | None = None
 
 
 class ArtifactResponse(BaseModel):

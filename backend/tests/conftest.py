@@ -7,6 +7,12 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+# Set before test-module imports initialise cached settings or the engine.
+os.environ["COPYCAT_DATABASE_URL"] = "sqlite:///./data/test_copycat.db"
+os.environ["COPYCAT_STORAGE_ROOT"] = "./data/test_uploads"
+os.environ["COPYCAT_REPORT_ROOT"] = "./data/test_reports"
+os.environ["COPYCAT_CELERY_TASK_ALWAYS_EAGER"] = "true"
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_env() -> None:

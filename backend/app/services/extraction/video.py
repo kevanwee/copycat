@@ -50,7 +50,7 @@ def probe_duration_seconds(path: str | Path) -> float:
         "json",
         str(path),
     ]
-    result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30)
     payload = json.loads(result.stdout)
     duration = payload.get("format", {}).get("duration")
     return float(duration) if duration is not None else 0.0
@@ -79,7 +79,7 @@ def normalize_video(input_path: str | Path, output_path: str | Path) -> None:
         "1",
         str(output_path),
     ]
-    subprocess.run(cmd, check=True, capture_output=True)
+    subprocess.run(cmd, check=True, capture_output=True, timeout=300)
 
 
 def extract_frames_with_hashes(video_path: str | Path, out_dir: str | Path) -> list[FrameSample]:
@@ -87,8 +87,8 @@ def extract_frames_with_hashes(video_path: str | Path, out_dir: str | Path) -> l
         import cv2
         import imagehash
         from PIL import Image
-    except Exception:
-        return []
+    except ImportError as exc:
+        raise RuntimeError("Video frame dependencies are unavailable") from exc
 
     output_dir = Path(out_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -152,7 +152,10 @@ def extract_video(path: str | Path, working_dir: str | Path) -> VideoExtractionR
     duration = probe_duration_seconds(normalized)
     frames_dir = work / "frames"
     frames = extract_frames_with_hashes(normalized, frames_dir)
-    transcript = transcribe_video_audio(normalized)
+    if not frames:
+        raise ValueError("No decodable video frames were found.")
+    # Model-based transcription is excluded from the deterministic visual workflow.
+    transcript = ""
 
     return VideoExtractionResult(
         source_path=str(src),
