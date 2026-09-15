@@ -12,13 +12,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <nav className="nav">
+        <a href="#main" className="skip-link">Skip to content</a>
+        <nav className="nav" aria-label="Main navigation">
           <Link href="/" className="nav-logo">
             <span className="nav-logo-dot" />
             Copycat
           </Link>
           <div className="nav-right">
-            <span className="nav-badge">v1 · SG Triage</span>
+            <span className="nav-badge">SG / Evidence workspace</span>
             <a
               href="https://sso.agc.gov.sg/Act/CA2021"
               target="_blank"
