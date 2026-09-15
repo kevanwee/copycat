@@ -25,13 +25,18 @@ export default function Home() {
   const [caseId, setCaseId] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [connecting, setConnecting] = useState(true);
   const [recent, setRecent] = useState<string[]>([]);
   async function load() {
+    setConnecting(true);
+    setError("");
     try {
       setQuestionnaire(await getQuestionnaire());
       setError("");
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setConnecting(false);
     }
   }
   useEffect(() => {
@@ -139,14 +144,22 @@ export default function Home() {
             <div role="alert" className="error">
               {error}
               {!questionnaire && (
-                <button className="text-button" onClick={load}>
+                <button
+                  className="text-button"
+                  onClick={load}
+                  disabled={connecting}
+                >
                   Retry connection
                 </button>
               )}
             </div>
           )}
           {!questionnaire ? (
-            <p role="status">Connecting to the analysis service…</p>
+            <p role="status">
+              {connecting
+                ? "Connecting to the analysis service…"
+                : "The analysis service is unavailable. Retry the connection to continue."}
+            </p>
           ) : (
             <fieldset disabled={Boolean(busy)} className="form-body">
               {step === 0 && (

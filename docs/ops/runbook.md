@@ -73,6 +73,30 @@ for the actual hosting arrangement. Never promise complete forensic erasure.
 
 ## Failure and recovery
 
+### Live frontend cannot connect
+
+If the Vercel site loads but the questionnaire does not, inspect the browser's
+request to `/api/v1/cases/questionnaire`. A healthy `/health` response alone does
+not verify browser access.
+
+For the existing deployment, set the Render API service environment variable
+`COPYCAT_FRONTEND_BASE_URL=https://copycat-mu.vercel.app` (no trailing slash),
+then redeploy that service. The frontend uses
+`NEXT_PUBLIC_API_BASE_URL=https://copycat-5wgw.onrender.com` at build time.
+Changing `render.yaml` does not establish that an existing service's dashboard
+environment was updated; check the running service's actual response.
+
+Verify both a questionnaire GET and an OPTIONS preflight with the Vercel
+`Origin`. Responses must include
+`Access-Control-Allow-Origin: https://copycat-mu.vercel.app`; the preflight must
+also permit `content-type` and `x-case-token`. Do not replace the allowlist with
+a wildcard. On 15 September 2026 the deployed v2 API returned the questionnaire
+but allowed localhost rather than the live Vercel origin, blocking the browser.
+
+Initial connection attempts time out after 15 seconds and offer a retry. A
+sleeping demo backend may take longer to start; retry after it wakes. Upload
+requests retain their separate, longer timeout.
+
 `GET /health` is liveness. Query `/api/v1/cases/questionnaire` to see available
 media, limits and active legal rules. Failed extraction produces a failed job,
 not a fabricated score. Users can rerun or start a new case with corrected files.

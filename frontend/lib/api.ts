@@ -198,7 +198,21 @@ async function request(
   return res;
 }
 export async function getQuestionnaire(): Promise<Questionnaire> {
-  return (await request("/cases/questionnaire")).json();
+  try {
+    return (
+      await request("/cases/questionnaire", {
+        signal: AbortSignal.timeout(15_000),
+      })
+    ).json();
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 0) {
+      throw new ApiError(
+        "Could not reach the analysis service. Please retry shortly.",
+        0,
+      );
+    }
+    throw error;
+  }
 }
 export async function createCase(intake: Intake) {
   const data = await (
