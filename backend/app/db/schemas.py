@@ -4,11 +4,13 @@ from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+from app.services.legal.intake import LegalIntake
 
 
 class CaseCreateRequest(BaseModel):
     jurisdiction: str = Field(default="SG")
     metadata: dict[str, Any] = Field(default_factory=dict)
+    intake: LegalIntake = Field(default_factory=LegalIntake)
 
 
 class CaseResponse(BaseModel):

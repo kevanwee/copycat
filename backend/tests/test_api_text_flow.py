@@ -28,4 +28,7 @@ def test_text_case_api_flow(client):
     assert report.status_code == 200
     body = report.json()["report"]
     assert body["headline_overlap_percentage"] >= 99.0
-    assert body["rule_pack_version"] == "sg_v1"
+    assert body["rule_pack_version"] == "2.0.0"
+    assert body["assessment"]["status"] == "scope_review"
+    assert all(n["answer"] == "unknown" for n in body["legal_flow"])
+    assert "risk_band" not in body

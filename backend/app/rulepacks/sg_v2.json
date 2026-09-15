@@ -1,0 +1,219 @@
+{
+  "rule_pack_id": "sg_v2",
+  "version": "2.0.0",
+  "title": "Singapore evidence-led copyright triage",
+  "jurisdiction": "SG",
+  "reviewed_on": "2026-09-15",
+  "source_status": "AGC current-version markers and relevant text checked manually; automated provision extraction incomplete. Application requires human review.",
+  "citations": {
+    "category": {
+      "title": "Work categories and separate rights: ss 8–18, 107",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr8-"
+    },
+    "subsistence": {
+      "title": "Authorial subsistence: ss 109–111; films: s 123",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr109-"
+    },
+    "qualification": {
+      "title": "Qualifying connections: ss 3, 109–111, 123; international protection requires regulations",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr3-"
+    },
+    "term": {
+      "title": "Duration and transitions: ss 114–116, 125, Part 12",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr114-"
+    },
+    "ownership": {
+      "title": "Ownership, assignments and standing: ss 133–142, 153, 156–159",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr133-"
+    },
+    "acts": {
+      "title": "Exclusive rights: ss 112–113, 124; infringement: s 146",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr146-"
+    },
+    "substantial": {
+      "title": "Substantial part: s 39",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr39-"
+    },
+    "exceptions": {
+      "title": "Exceptions and permitted uses: s 152, Part 5",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr152-"
+    },
+    "fairuse": {
+      "title": "Fair use: ss 190–191",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr191-"
+    },
+    "acknowledgment": {
+      "title": "Acknowledgment for news, criticism or review: s 192",
+      "url": "https://sso.agc.gov.sg/Act/CA2021?ProvIds=pr192-"
+    },
+    "app": {
+      "title": "Asia Pacific Publishing v Pioneers & Leaders [2011] SGCA 37 at [107]–[113] (1987 Act)",
+      "url": "https://www.elitigation.sg/gd/s/2011_SGCA_37"
+    },
+    "gyp": {
+      "title": "Global Yellow Pages v Promedia [2017] SGCA 28 at [24]–[30], [35]–[39] (1987 Act)",
+      "url": "https://www.elitigation.sg/gd/s/2017_SGCA_28"
+    },
+    "recordtv": {
+      "title": "RecordTV v MediaCorp [2010] SGCA 43 at [50]–[60] (1987 Act)",
+      "url": "https://www.elitigation.sg/gd/s/2010_SGCA_43"
+    }
+  },
+  "questions": [
+    {
+      "id": "subsistence_conditions",
+      "phase": "Protection",
+      "prompt": "Are the category-specific conditions for protection satisfied?",
+      "explanation": "For literary, dramatic, musical or artistic works, identify human authorship and original expression, and recording where required. For film copyright, assess s 123; do not import the authorial originality test.",
+      "evidence_needed": "Creation drafts, identified author or film maker, publication history and the particular protected work.",
+      "legal_refs": [
+        "category",
+        "subsistence",
+        "gyp"
+      ]
+    },
+    {
+      "id": "qualifying_connection",
+      "phase": "Protection",
+      "prompt": "Does the work qualify for protection in Singapore?",
+      "explanation": "Citizenship, residence, making and first publication can matter. Foreign works may qualify through s 3 and international-protection regulations. Selecting Singapore here does not prove this limb.",
+      "evidence_needed": "Nationality/residence and first-publication evidence; applicable reciprocating-country regulation.",
+      "legal_refs": [
+        "qualification",
+        "subsistence"
+      ]
+    },
+    {
+      "id": "term_active",
+      "phase": "Protection",
+      "prompt": "Was copyright still in force when the alleged act occurred?",
+      "explanation": "Check work category, creation, author death, publication and transitional provisions. Do not assume a universal 70-year calculation.",
+      "evidence_needed": "Dated creation, publication and death records, with the relevant term calculation.",
+      "legal_refs": [
+        "term"
+      ]
+    },
+    {
+      "id": "ownership_standing",
+      "phase": "Rights and conduct",
+      "prompt": "Does the claimant own the relevant right or have standing as exclusive licensee?",
+      "explanation": "Authorship, employment, commissioning, assignment and the scope of any exclusive licence require separate checks.",
+      "evidence_needed": "Chain of title, signed assignments, employment/commission contracts or exclusive licence.",
+      "legal_refs": [
+        "ownership"
+      ]
+    },
+    {
+      "id": "restricted_act",
+      "phase": "Rights and conduct",
+      "prompt": "Does the alleged conduct engage an exclusive right for this work category?",
+      "explanation": "Describe the act and map it to the right: copying, communication, publication of an unpublished work, performance or adaptation as applicable. Artistic works and films have different rights.",
+      "evidence_needed": "Dated copies, screenshots, URLs or records showing the act and applicable right.",
+      "legal_refs": [
+        "acts"
+      ]
+    },
+    {
+      "id": "singapore_act",
+      "phase": "Rights and conduct",
+      "prompt": "Was the relevant act done in Singapore?",
+      "explanation": "Section 146 requires a Singapore act or authorisation of such an act; internet availability alone should not decide location.",
+      "evidence_needed": "Hosting, distribution, audience and actor-location evidence relevant to the specific act.",
+      "legal_refs": [
+        "acts"
+      ]
+    },
+    {
+      "id": "permission_absent",
+      "phase": "Rights and conduct",
+      "prompt": "Was the act outside ownership, licence or other permission?",
+      "explanation": "Check the actor's ownership and the licence scope, dates, territory and conditions. No known licence is not proof that none exists.",
+      "evidence_needed": "Licences, correspondence, permissions and scope analysis.",
+      "legal_refs": [
+        "acts"
+      ]
+    },
+    {
+      "id": "causal_connection",
+      "phase": "Copying and taking",
+      "prompt": "Does evidence support copying from the claimant's work?",
+      "explanation": "Access plus relevant similarity can support an inference, subject to rebuttal. Access alone and a computed score cannot establish copying.",
+      "evidence_needed": "Access chronology, source files, common errors or admissions; address independent creation.",
+      "legal_refs": [
+        "app"
+      ]
+    },
+    {
+      "id": "protected_expression",
+      "phase": "Copying and taking",
+      "prompt": "Do the relied-on similarities concern protected expression?",
+      "explanation": "Exclude mere ideas, facts, methods and commonplace material from the legal comparison. Compilation rights concern original selection or arrangement.",
+      "evidence_needed": "Identify the exact passages/features and explain the original expression they reproduce.",
+      "legal_refs": [
+        "gyp"
+      ]
+    },
+    {
+      "id": "substantial_part",
+      "phase": "Copying and taking",
+      "prompt": "Was the whole work or a legally substantial part taken?",
+      "explanation": "Assess the quality and importance of protected expression taken in relation to the claimant's work. No similarity percentage is a legal threshold.",
+      "evidence_needed": "Pinpoint the taking and explain its qualitative importance; consider the claimant's work as a whole.",
+      "legal_refs": [
+        "substantial",
+        "gyp",
+        "app"
+      ]
+    },
+    {
+      "id": "independent_creation",
+      "phase": "Copying and taking",
+      "prompt": "Is there evidence of independent creation or a common source?",
+      "explanation": "A positive answer requires review of the copying inference; it does not automatically prove a defence.",
+      "evidence_needed": "Independent drafts, dates, common-source material and an account of the creation process.",
+      "legal_refs": [
+        "app"
+      ]
+    },
+    {
+      "id": "fair_use",
+      "phase": "Exceptions",
+      "prompt": "Has fair use been assessed as applicable?",
+      "explanation": "Assess all relevant circumstances, including the four s 191 factors, and acknowledgment under s 192 where relevant. The tool records your assessment without balancing the factors itself.",
+      "evidence_needed": "Complete the fair-use factors and explain your overall assessment.",
+      "legal_refs": [
+        "fairuse",
+        "acknowledgment"
+      ]
+    },
+    {
+      "id": "other_exception",
+      "phase": "Exceptions",
+      "prompt": "Does another permitted use or statutory exception apply?",
+      "explanation": "Consider the specific conditions of education, research, computational data analysis, library, accessibility, judicial and other applicable permitted uses. A purpose label is insufficient.",
+      "evidence_needed": "Identify the provision and evidence satisfying every condition; record why alternatives do not apply.",
+      "legal_refs": [
+        "exceptions"
+      ]
+    }
+  ],
+  "core_requirements": [
+    "subsistence_conditions",
+    "qualifying_connection",
+    "term_active",
+    "ownership_standing",
+    "restricted_act",
+    "singapore_act",
+    "permission_absent",
+    "causal_connection",
+    "protected_expression",
+    "substantial_part"
+  ],
+  "supported_categories": [
+    "literary",
+    "dramatic",
+    "musical",
+    "artistic",
+    "film"
+  ]
+}

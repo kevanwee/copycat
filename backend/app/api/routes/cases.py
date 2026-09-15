@@ -35,7 +35,9 @@ def create_case(payload: CaseCreateRequest, db: Session = Depends(get_db)) -> Ca
     if jurisdiction not in settings.allowed_jurisdictions_list:
         raise HTTPException(status_code=400, detail=f"Unsupported jurisdiction: {jurisdiction}")
 
-    case = Case(jurisdiction=jurisdiction, status="created", metadata_json=payload.metadata)
+    if payload.metadata:
+        raise HTTPException(status_code=422, detail="Use the typed intake field; unvalidated metadata is no longer accepted")
+    case = Case(jurisdiction=jurisdiction, status="created", metadata_json={"intake": payload.intake.model_dump(mode="json")})
     db.add(case)
     db.commit()
     db.refresh(case)

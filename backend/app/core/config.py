@@ -30,8 +30,8 @@ class Settings(BaseSettings):
     default_jurisdiction: str = "SG"
 
     retention_hours: int = 24
-    scoring_version: str = "v1.0.0"
-    rule_pack_version: str = "sg_v1"
+    scoring_version: str = "v2.0.0"
+    rule_pack_version: str = "sg_v2"
 
     whisper_model_name: str = "base"
     ffmpeg_bin: str = "ffmpeg"

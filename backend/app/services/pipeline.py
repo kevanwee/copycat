@@ -7,7 +7,7 @@ from app.db.models import Artifact, Case, CaseReport, Job, SimilarityMetric
 from app.services.extraction.text import extract_text
 from app.services.extraction.video import extract_video, probe_duration_seconds
 from app.services.extraction.image import extract_image
-from app.services.legal.engine import compute_risk_band, evaluate_rulepack
+from app.services.legal.engine import assess_outcome, evaluate_rulepack
 from app.services.legal.rulepack_loader import load_rulepack
 from app.services.reports.builder import build_report_payload
 from app.services.reports.pdf_renderer import render_report_pdf
@@ -178,26 +178,10 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
 
     _update_job(db, job, status="running", stage="legal_triage", progress=0.75)
 
-    raw_legal_inputs = case.metadata_json.get("legal_inputs", {}) if isinstance(case.metadata_json, dict) else {}
-    legal_inputs = raw_legal_inputs if isinstance(raw_legal_inputs, dict) else {}
-    legal_facts = {
-        "work_category_supported": legal_inputs.get("work_category_supported", True),
-        "originality_evidence": legal_inputs.get("originality_evidence", True),
-        "fixation_evidence": legal_inputs.get("fixation_evidence", True),
-        "sg_connection": legal_inputs.get("sg_connection", case.jurisdiction == "SG"),
-        "term_active": legal_inputs.get("term_active", True),
-        "ownership_asserted": legal_inputs.get("ownership_asserted", True),
-        "acts_covered": legal_inputs.get("acts_covered", True),
-        "authorization_present": legal_inputs.get("authorization_present", False),
-        "access_evidence": legal_inputs.get("access_evidence", similarity_payload["headline_score"] >= 0.25),
-        "similarity_score": similarity_payload["headline_score"],
-        "qualitative_importance_flag": legal_inputs.get("qualitative_importance_flag", similarity_payload["headline_score"] >= 0.5),
-        "fair_use_indicator": legal_inputs.get("fair_use_indicator", False),
-    }
-
+    legal_facts = case.metadata_json.get("intake", {})
     rulepack = load_rulepack()
     node_results, node_answers = evaluate_rulepack(rulepack=rulepack, facts=legal_facts)
-    risk_band = compute_risk_band(node_answers=node_answers, similarity_score=similarity_payload["headline_score"])
+    outcome = assess_outcome(rulepack, legal_facts, node_answers)
 
     _update_job(db, job, status="running", stage="report", progress=0.9)
 
@@ -207,7 +191,7 @@ def analyze_case_job(db: Session, *, case_id: str, job_id: str) -> dict:
         media_type=media_type,
         similarity=similarity_payload,
         legal_nodes=node_results,
-        risk_band=risk_band,
+        outcome=outcome,
         rulepack=rulepack,
     )
 
