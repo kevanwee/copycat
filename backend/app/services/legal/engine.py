@@ -54,7 +54,7 @@ def assess_outcome(rulepack: dict, intake: dict, answers: dict[str, str]) -> dic
         scope.append("Authorisation and secondary infringement require separate review of conduct, control and statutory conditions.")
     if facts.conduct_date is None:
         scope.append("Supply the alleged conduct date to check which law applies.")
-    elif facts.conduct_date.isoformat() < "2021-11-21" or facts.conduct_date.isoformat() > rulepack["reviewed_on"]:
+    elif facts.conduct_date.isoformat() < rulepack.get("consolidation_effective_from", "2025-03-09") or facts.conduct_date.isoformat() > rulepack["reviewed_on"]:
         scope.append("The conduct date falls outside the reviewed legal period; check the law at that date.")
     if facts.work_category == "film":
         scope.append("Film copyright only: assess soundtrack, script, music, artistic works and performance rights separately.")

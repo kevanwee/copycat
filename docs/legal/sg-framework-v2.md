@@ -71,9 +71,9 @@ not a direct-copying shortcut. Criminal offences, remedies, moral rights,
 limitation, groundless threats, design overlap and disputed international
 protection are not determined by this rulepack.
 
-Historical conduct requires the version at that date. The application's
-post-21-November-2021 intake is a screening period, not proof that every current
-provision applied unchanged throughout it. In particular, check amendments to
+Historical conduct requires the version at that date. The application routes
+conduct before the retrieved consolidation's 9 March 2025 effective date to
+scope review. In particular, check amendments to
 any exception relied on. Never read “not established on supplied assessments”
 as a finding of non-infringement or “supported” as a court's verdict.
 

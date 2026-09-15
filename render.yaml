@@ -16,4 +16,10 @@ services:
         value: "true"
       - key: COPYCAT_ENVIRONMENT
         value: production
+      - key: COPYCAT_FRONTEND_BASE_URL
+        value: https://copycat-mu.vercel.app
+      - key: COPYCAT_RULE_PACK_VERSION
+        value: sg_v2
+      - key: COPYCAT_SCORING_VERSION
+        value: v2.0.0
     healthCheckPath: /health

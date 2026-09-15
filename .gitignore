@@ -34,3 +34,4 @@ frontend/test-results/
 frontend/playwright-report/
 backend/data/e2e*
 backend/data/*.db
+.tools/

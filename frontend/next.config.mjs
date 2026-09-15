@@ -2,6 +2,7 @@
 const nextConfig = {
   devIndicators: false,
   poweredByHeader: false,
+  output: 'standalone',
   async headers() {
     return [{source: '/:path*', headers: [
       {key: 'Referrer-Policy', value: 'no-referrer'},

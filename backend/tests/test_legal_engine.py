@@ -54,7 +54,7 @@ def test_fair_use_is_not_a_checkbox_discount():
     assert outcome(facts)["status"] == "review_required"
 
 
-@pytest.mark.parametrize("change", [{"work_category": "unknown"}, {"claim_route": "secondary"}, {"claim_route": "authorisation"}, {"conduct_date": "2019-01-01"}, {"conduct_date": "2027-01-01"}])
+@pytest.mark.parametrize("change", [{"work_category": "unknown"}, {"claim_route": "secondary"}, {"claim_route": "authorisation"}, {"conduct_date": "2019-01-01"}, {"conduct_date": "2024-01-01"}, {"conduct_date": "2027-01-01"}])
 def test_scope_gates(change):
     assert outcome(dict(complete_intake(), **change))["status"] == "scope_review"
 

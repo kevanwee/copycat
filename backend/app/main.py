@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.db.session import Base, engine, SessionLocal
 from app.db.models import Case, Job
 from app.services.retention import cleanup_expired
+from app.services.request_limits import RequestLimits
 
 settings = get_settings()
 
@@ -50,6 +51,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, version="2.0.0", lifespan=lifespan)
+app.add_middleware(RequestLimits)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,4 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import '@fontsource/dm-sans/latin-400.css';
+@import '@fontsource/dm-sans/latin-500.css';
+@import '@fontsource/dm-sans/latin-600.css';
+@import '@fontsource/dm-sans/latin-700.css';
+@import '@fontsource/manrope/latin-400.css';
+@import '@fontsource/manrope/latin-500.css';
+@import '@fontsource/manrope/latin-600.css';
+@import '@fontsource/manrope/latin-700.css';
+@import '@fontsource/manrope/latin-800.css';
 
 :root{--bg:#f5f6f2;--surface:#fff;--ink:#203c35;--muted:#5c6d66;--border:#dbe2db;--green:#235b47;--light:#edf3eb;--amber:#775a24;--red:#9a3434;--radius:16px}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',Arial,sans-serif;font-size:15px;line-height:1.6}a{color:var(--green);text-underline-offset:4px}button,input,select,textarea{font:inherit}button,a,input,select,textarea,summary{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.5}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #af6b1b;outline-offset:4px}h1,h2,h3{font-family:'Manrope',Arial,sans-serif;line-height:1.25;letter-spacing:-.035em;margin:0 0 14px}h1{font-size:clamp(30px,4.3vw,49px);font-weight:600}h2{font-size:25px;font-weight:650}h3{font-size:18px;font-weight:650}p{margin:0 0 16px}small{font-size:12px;line-height:1.5;color:var(--muted)}fieldset{min-width:0}figure{margin:0}::selection{background:#d7e8b8}

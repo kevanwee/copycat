@@ -6,18 +6,32 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import reportlab
+
+_FONT_DIR = Path(reportlab.__file__).parent / "fonts"
+pdfmetrics.registerFont(TTFont("CopycatSans", str(_FONT_DIR / "Vera.ttf")))
+pdfmetrics.registerFont(TTFont("CopycatBold", str(_FONT_DIR / "VeraBd.ttf")))
+
+
+def portable_text(text):
+    widths = pdfmetrics.getFont("CopycatSans").face.charWidths
+    return "".join(c if ord(c) in widths or c == "\n" else f"[U+{ord(c):04X}]" for c in str(text))
 
 
 def render_report_pdf(report: dict, path: Path) -> str:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     styles = getSampleStyleSheet()
+    for style in styles.byName.values():
+        style.fontName = "CopycatBold" if style.name.startswith("Heading") or style.name == "Title" else "CopycatSans"
     styles["BodyText"].fontSize = 9
     styles["BodyText"].leading = 13
     story = []
 
     def add(text, style="BodyText"):
-        story.append(Paragraph(escape(str(text)).replace("\n", "<br/>"), styles[style]))
+        story.append(Paragraph(escape(portable_text(text)).replace("\n", "<br/>"), styles[style]))
         story.append(Spacer(1, 5))
 
     add("Copycat | Singapore copyright triage", "Title")
@@ -56,6 +70,7 @@ def render_report_pdf(report: dict, path: Path) -> str:
         else:
             add(json.dumps(val, ensure_ascii=False))
     add("Method and limitations", "Heading2")
+    add("Characters outside the embedded font are preserved as [U+XXXX] code points. The JSON export preserves the original Unicode text.")
     add(f"Scoring {report['scoring_version']}; rulepack {report['rule_pack_id']} {report['rule_pack_version']}; SHA-256 {report['rule_pack_sha256']}")
     add(json.dumps(report["dependencies"], sort_keys=True))
     add(report["source_status"])

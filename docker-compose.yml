@@ -1,61 +1,37 @@
-version: "3.9"
-
 services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
   backend:
-    build:
-      context: ./backend
+    build: ./backend
+    restart: unless-stopped
     environment:
       COPYCAT_DATABASE_URL: sqlite:///./data/copycat.db
       COPYCAT_STORAGE_ROOT: ./data/uploads
       COPYCAT_REPORT_ROOT: ./data/reports
-      COPYCAT_CELERY_BROKER_URL: redis://redis:6379/0
-      COPYCAT_CELERY_RESULT_BACKEND: redis://redis:6379/1
-      COPYCAT_CELERY_TASK_ALWAYS_EAGER: "false"
-      COPYCAT_ALLOWED_JURISDICTIONS: SG
-      COPYCAT_MAX_TEXT_MB: "50"
-      COPYCAT_MAX_VIDEO_MB: "1024"
-      COPYCAT_MAX_VIDEO_SECONDS: "900"
-    depends_on:
-      - redis
+      COPYCAT_CELERY_TASK_ALWAYS_EAGER: "true"
+      COPYCAT_FRONTEND_BASE_URL: http://localhost:3000
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
-      - ./backend:/app
-
-  worker:
-    build:
-      context: ./backend
-    command: celery -A app.celery_app.celery_app worker --loglevel=info
-    environment:
-      COPYCAT_DATABASE_URL: sqlite:///./data/copycat.db
-      COPYCAT_STORAGE_ROOT: ./data/uploads
-      COPYCAT_REPORT_ROOT: ./data/reports
-      COPYCAT_CELERY_BROKER_URL: redis://redis:6379/0
-      COPYCAT_CELERY_RESULT_BACKEND: redis://redis:6379/1
-      COPYCAT_CELERY_TASK_ALWAYS_EAGER: "false"
-      COPYCAT_ALLOWED_JURISDICTIONS: SG
-      COPYCAT_MAX_TEXT_MB: "50"
-      COPYCAT_MAX_VIDEO_MB: "1024"
-      COPYCAT_MAX_VIDEO_SECONDS: "900"
-    depends_on:
-      - redis
-    volumes:
-      - ./backend:/app
-
+      - case-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
   frontend:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run dev"
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
+      - "127.0.0.1:3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+volumes:
+  case-data:

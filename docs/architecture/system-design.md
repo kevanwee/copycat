@@ -1,32 +1,41 @@
-# System Design
+# System design — v2
 
-## Components
-- Next.js frontend
-- FastAPI API service
-- Celery worker
-- Redis queue/broker
-- SQL database (SQLite dev, PostgreSQL-ready)
-- Object storage abstraction (local dev; S3-compatible in deployment)
+```mermaid
+flowchart LR
+  UI[Next.js evidence workspace] -->|Case access key| API[FastAPI]
+  API --> DB[(SQLite: cases, artifacts, jobs, metrics, reports)]
+  API --> FS[(Local persistent volume)]
+  API -->|After response| Worker[Local background analysis]
+  Worker --> Extract[Validated text / image / visual video extraction]
+  Extract --> Score[Deterministic similarity and evidence]
+  Worker --> Legal[Typed user assessments + SG rulepack]
+  Score --> Report[Fingerprint + JSON + PDF]
+  Legal --> Report
+  Report --> DB
+  Report --> FS
+  Cleanup[Expiry and case deletion] --> DB
+  Cleanup --> FS
+```
 
-## Data Flow
-1. Create case
-2. Upload original + alleged artifacts
-3. Start analyze job
-4. Worker extracts and scores
-5. Legal rule pack evaluation
-6. JSON report persisted
-7. PDF rendered and served
+The supported default is one API process with local background tasks and local
+storage. Celery/Redis dispatch is optional and needs deployment-specific
+validation; S3 and account-based multi-tenant identity are not implemented.
 
-## Deterministic Surfaces
-- preprocessing
-- scoring weights
-- legal node evaluation
-- report id derivation from checksums and versions
+## Invariants
 
-## Retention
-- cleanup script deletes artifacts/reports older than 24h
+- Every private route checks a case-scoped secret; the database stores its hash.
+- Uploads authenticate before multipart parsing. Declared and streamed body
+  sizes are bounded, and actual format and media limits are checked.
+- Atomic case-state transitions reject concurrent analysis/mutation. Running
+  inputs are immutable. Global capacity is a best-effort admission guard.
+- Context/file edits invalidate both JSON and PDF. Case state must be completed
+  before a report can be read.
+- Unknown assessments never become known by looking at a score. Fair-use factor
+  completeness is checked independently of the similarity pipeline.
+- Report identity includes role-bound artifacts, intake, rules, method versions,
+  dependencies and outputs; it excludes case ID and generation time.
+- Case expiry denies access immediately; periodic cleanup handles the files and
+  database records, with running work protected from simultaneous deletion.
 
-## Deployment Notes
-- Single-tenant cloud target
-- private network placement
-- encrypted storage/DB
+See [operations](../ops/runbook.md) for startup recovery, migration, public
+deployment prerequisites and backup/physical-erasure limitations.

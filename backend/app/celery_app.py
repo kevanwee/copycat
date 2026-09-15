@@ -21,6 +21,9 @@ celery_app.conf.update(
     accept_content=["json"],
     timezone="UTC",
     enable_utc=True,
+    task_ignore_result=True,
+    task_time_limit=900,
+    task_soft_time_limit=840,
 )
 
 celery_app.autodiscover_tasks(["app.tasks"])

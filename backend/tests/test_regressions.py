@@ -90,6 +90,23 @@ def test_oversized_upload(client, monkeypatch):
     assert result.status_code == 413
 
 
+def test_ingress_limit_and_early_upload_auth(client):
+    case, key = new_case(client)
+    result = client.post('/api/v1/cases', content=b' ' * (256*1024+1), headers={'Content-Type': 'application/json'})
+    assert result.status_code == 413
+    result = client.post(f'/api/v1/cases/{case}/artifacts', content=b'not multipart', headers={'X-Case-Token': 'wrong'})
+    assert result.status_code == 404
+
+
+def test_docx_tables_are_extracted(tmp_path):
+    from docx import Document
+    from app.services.extraction.text import extract_text
+    doc = Document(); doc.add_paragraph('Before'); table = doc.add_table(rows=1, cols=1); table.cell(0,0).text = 'Inside the table'; doc.add_paragraph('After')
+    path = tmp_path / 'table.docx'; doc.save(path)
+    text = extract_text(path).text
+    assert text.index('Before') < text.index('Inside the table') < text.index('After')
+
+
 def test_unreadable_pdf_fails_without_false_score(client):
     writer = PdfWriter(); writer.add_blank_page(100, 100)
     buf = io.BytesIO(); writer.write(buf)
@@ -187,3 +204,40 @@ def test_image_flow_and_preview(client):
     assert report['headline_overlap_percentage'] == 100
     assert 'paths' not in report['evidence']
     assert client.get(f'/api/v1/cases/{case}/preview/original').headers['content-type'] == 'image/png'
+
+
+def test_visual_video_flow(client, tmp_path):
+    import shutil
+    import subprocess
+    from app.core.config import get_settings
+    settings = get_settings()
+    if not shutil.which(settings.ffmpeg_bin) or not shutil.which(settings.ffprobe_bin):
+        pytest.skip('FFmpeg/ffprobe not installed')
+    pytest.importorskip('imagehash'); pytest.importorskip('cv2'); pytest.importorskip('skimage')
+    path = tmp_path / 'synthetic.mp4'
+    subprocess.run([settings.ffmpeg_bin, '-y', '-f', 'lavfi', '-i', 'testsrc2=size=320x240:rate=10',
+        '-t', '2', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', str(path)], check=True, capture_output=True, timeout=30)
+    case, _ = new_case(client)
+    upload_pair(client, case, path.read_bytes(), media='video', extension='mp4')
+    job = client.post(f'/api/v1/cases/{case}/analyze').json()['job_id']
+    status = client.get(f'/api/v1/jobs/{job}').json()
+    assert status['status'] == 'completed', status
+    report = client.get(f'/api/v1/cases/{case}/report').json()['report']
+    assert report['headline_overlap_percentage'] == 100
+    assert report['component_scores']['V4_transcript_similarity'] is None
+    assert len(report['evidence']['timeline_matches']) == 4
+    assert 'original_frame_path' not in report['evidence']['timeline_matches'][0]
+    assert 'ffmpeg' in report['dependencies']
+    assert client.get(f'/api/v1/cases/{case}/report.pdf').content.startswith(b'%PDF-')
+
+
+def test_chunked_body_limit(client):
+    body = (b' ' * 100_000 for _ in range(3))
+    response = client.post('/api/v1/cases', content=body, headers={'Content-Type': 'application/json'})
+    assert response.status_code == 413
+
+
+def test_pdf_missing_glyphs_are_preserved_as_codepoints():
+    from app.services.reports.pdf_renderer import portable_text
+    assert portable_text('café') == 'café'
+    assert portable_text('你好') == '[U+4F60][U+597D]'

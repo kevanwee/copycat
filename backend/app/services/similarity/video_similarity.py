@@ -58,8 +58,8 @@ def _compute_ssim_and_psnr(aligned: list[tuple[FrameSample, FrameSample, float]]
     try:
         import cv2
         from skimage.metrics import structural_similarity as ssim
-    except Exception:
-        return 0.0, 0.0
+    except ImportError as exc:
+        raise RuntimeError("Video structure metrics are unavailable") from exc
 
     if not aligned:
         return 0.0, 0.0
@@ -79,7 +79,7 @@ def _compute_ssim_and_psnr(aligned: list[tuple[FrameSample, FrameSample, float]]
         if gray_a.shape != gray_b.shape:
             gray_b = cv2.resize(gray_b, (gray_a.shape[1], gray_a.shape[0]))
 
-        ssim_values.append(float(ssim(gray_a, gray_b)))
+        ssim_values.append(max(0.0, min(1.0, float(ssim(gray_a, gray_b)))))
         psnr_values.append(float(cv2.PSNR(img_a, img_b)))
 
     if not ssim_values:

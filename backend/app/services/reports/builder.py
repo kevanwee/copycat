@@ -15,11 +15,15 @@ def build_report_payload(case, artifacts, media_type, similarity, legal_nodes, o
     sources = [dict(role=a.role, filename=a.filename, sha256=a.checksum_sha256, size_bytes=a.size_bytes)
                for a in sorted(artifacts, key=lambda a: a.role)]
     dependencies = {}
-    for package in ("pypdf", "python-docx", "Pillow", "numpy", "opencv-python-headless", "scikit-image", "ImageHash"):
+    for package in ("pypdf", "python-docx", "langdetect", "Pillow", "numpy", "scipy", "PyWavelets", "opencv-python-headless", "scikit-image", "ImageHash"):
         try:
             dependencies[package] = version(package)
         except PackageNotFoundError:
             dependencies[package] = "unavailable"
+    if media_type == "video":
+        import subprocess
+        dependencies["ffmpeg"] = subprocess.run([settings.ffmpeg_bin, "-version"], capture_output=True, text=True, check=True, timeout=10).stdout.splitlines()[0]
+        dependencies["ffprobe"] = subprocess.run([settings.ffprobe_bin, "-version"], capture_output=True, text=True, check=True, timeout=10).stdout.splitlines()[0]
     content = dict(schema_version="2.0", jurisdiction=case.jurisdiction, media_type=media_type,
         intake=case.metadata_json.get("intake", {}), artifacts=sources,
         similarity=similarity, legal_flow=[asdict(n) for n in legal_nodes], assessment=outcome,
